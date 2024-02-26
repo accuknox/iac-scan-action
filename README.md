@@ -14,8 +14,8 @@
 | output_format | The format of the output. Options: cli, json, junitxml, github_failed_only, or sarif (comma-separated) | Optional | `json` |
 | output_file_path | Path and name for the output file, needs to end with a comma for a single output format | Optional | ./results.json |
 | soft_fail | Do not return an error code if there are failed checks | Optional | - |
-| framework | Run only on a specific infrastructure, values can be Kubernetes or Terraform. | Optional | - |
-| skip_framework | Skip a specific infrastructure | Optional | - |
+| framework | Run only on a specific infrastructure, values can be Kubernetes or Terraform. | Optional(🚧) | - |
+| skip_framework | Skip a specific infrastructure | Optional(🚧) | - |
 | baseline | Path to a baseline file to compare. Report will include only failed checks that are not in the baseline | Optional | `baseline` |
 | token | The token for authenticating with the CSPM panel | Required | - |
 | tenant_id | The ID of the tenant associated with the CSPM panel | Required | - |
