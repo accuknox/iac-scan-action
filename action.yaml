@@ -2,7 +2,7 @@ name: 'Accuknox IaC'
 description: 'Run Scan against infrastructure as code.'
 inputs:
   file:
-    description: 'File with infrastructure code or packages to scan'
+    description: 'Specify a file for scanning; cannot be used with directory input. Filter runners by file type, e.g., ".tf" for Terraform.'
     required: false
   directory:
     default: '.'
@@ -25,16 +25,10 @@ inputs:
     description: 'do not return an error code if there are failed checks'
     required: false
   framework:
-    description: 'run only on a specific infrastructure'
+    description: 'Run only on a specific infrastructure, Supported: Kuberenetes & Terraform'
     required: false
   skip_framework:
-    description: 'skip a specific infrastructure'
-    required: false
-  github_pat:
-    description: 'Environment variable name for a Github personal access token for scanning external modules sourced from private repositories'
-    required: false
-  enable_secrets_scan_all_files:
-    description: 'Scan all files for secrets'
+    description: 'Skip a specific infrastructure'
     required: false
   token:
     description: 'The token for authenticating with the CSPM panel.'
@@ -77,13 +71,14 @@ runs:
           INPUT_OUTPUT_FILE_PATH: ${{ inputs.output_file_path }}
           INPUT_SOFT_FAIL: ${{ inputs.soft_fail }}
           INPUT_FRAMEWORK: ${{ inputs.framework }}
-        
+
       - name: Formating the results  
         run: | 
-          sudo jq --arg repoLink "${{ github.server_url }}/${{ github.repository }}" --arg branch "${{ github.head_ref }}" '. += [{"details": {"repo": $repoLink, "branch": $branch}}]' /results.json | sudo tee /results.json > /dev/null
+          jq --arg repoLink "${{ github.server_url }}/${{ github.repository }}" --arg branch "${{ github.head_ref }}" '. += [{"details": {"repo": $repoLink, "branch": $branch}}]' results/results_json.json > temp.json && mv temp.json results.json
         shell: bash
-        
+
+
       - name: Push report to CSPM panel
         run: |
-          curl --location --request POST 'https://${{ inputs.endpoint }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=IAC&save_to_s3=false' --header 'Tenant-Id: ${{ inputs.tenant_id  }}' --header 'Authorization: Bearer ${{ inputs.token }}' --form 'file=@"./results.json"'
-        shell: bash
+          curl --location --request POST 'https://${{ inputs.endpoint }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=IAC&save_to_s3=false' --header 'Tenant-Id: ${{ inputs.tenant_id  }}' --header 'Authorization: Bearer ${{ inputs.token }}' --form 'file=@"results.json"'
+        shell: bash 
