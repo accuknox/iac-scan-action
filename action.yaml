@@ -1,84 +1,83 @@
-name: 'Accuknox IaC'
-description: 'Run Scan against infrastructure as code.'
+name: "Accuknox IaC"
+description: "Run Scan against infrastructure as code."
 inputs:
   file:
     description: 'Specify a file for scanning; cannot be used with directory input. Filter runners by file type, e.g., ".tf" for Terraform.'
     required: false
   directory:
-    default: '.'
-    description: 'Directory with infrastructure code and/or package manager files to scan'
+    default: "."
+    description: "Directory with infrastructure code and/or package manager files to scan"
     required: false
   compact:
-    description: 'Do not display code blocks in output'
+    description: "Do not display code blocks in output"
     required: false
   quiet:
-    description: 'display only failed checks'
+    description: "display only failed checks"
     required: false
   output_format:
-    description: 'The format of the output. cli, json, junitxml, github_failed_only, or sarif (comma separated)'
+    description: "The format of the output. cli, json, junitxml, github_failed_only, or sarif (comma separated)"
     required: false
-    default: 'json'
+    default: "json"
   output_file_path:
-    description: 'Path and name for output file, needs to end with a comma for a single output format'
+    description: "Path and name for output file, needs to end with a comma for a single output format"
     required: false
+    default: "./results.json"
   soft_fail:
-    description: 'do not return an error code if there are failed checks'
+    description: "do not return an error code if there are failed checks"
     required: false
   framework:
-    description: 'Run only on a specific infrastructure, Supported: Kuberenetes & Terraform'
+    description: "Run only on a specific infrastructure, Supported: Kuberenetes & Terraform"
     required: false
   skip_framework:
-    description: 'Skip a specific infrastructure'
+    description: "Skip a specific infrastructure"
     required: false
   token:
-    description: 'The token for authenticating with the CSPM panel.'
+    description: "The token for authenticating with the CSPM panel."
     required: true
   tenant_id:
-    description: 'The ID of the tenant associated with the CSPM panel.'
+    description: "The ID of the tenant associated with the CSPM panel."
     required: true
   endpoint:
-    description: 'The URL of the CSPM panel to push the scan results to.'
+    description: "The URL of the CSPM panel to push the scan results to."
     required: true
-    default: 'cspm.demo.accuknox.com'
-    
+    default: "cspm.demo.accuknox.com"
+
 branding:
-  icon: 'shield'
-  color: 'purple'
+  icon: "shield"
+  color: "purple"
 
 runs:
-  using: 'composite'
-  steps: 
+  using: "composite"
+  steps:
+    - name: Run Checkov IaC Scan
+      id: checkov-scan
+      uses: docker://ghcr.io/bridgecrewio/checkov:3.2.21
+      with:
+        args: |
+          ${INPUT_FILE}
+          ${INPUT_DIRECTORY}
+          ${INPUT_COMPACT}
+          ${INPUT_QUIET}
+          ${INPUT_OUTPUT_FORMAT}
+          ${INPUT_OUTPUT_FILE_PATH}
+          ${INPUT_SOFT_FAIL}
+          ${INPUT_FRAMEWORK}
+      env:
+        INPUT_FILE: ${{ inputs.file }}
+        INPUT_DIRECTORY: ${{ inputs.directory }}
+        INPUT_COMPACT: ${{ inputs.compact }}
+        INPUT_QUIET: ${{ inputs.quiet }}
+        INPUT_OUTPUT_FORMAT: ${{ inputs.output_format }}
+        INPUT_OUTPUT_FILE_PATH: ${{ inputs.output_file_path }}
+        INPUT_SOFT_FAIL: ${{ inputs.soft_fail }}
+        INPUT_FRAMEWORK: ${{ inputs.framework }}
 
-      - name: Run Checkov IaC Scan
-        id: checkov-scan
-        uses: docker://ghcr.io/bridgecrewio/checkov:3.2.21
-        with:
-          args: |
-            ${INPUT_FILE}
-            ${INPUT_DIRECTORY}
-            ${INPUT_COMPACT}
-            ${INPUT_QUIET}
-            ${INPUT_OUTPUT_FORMAT}
-            ${INPUT_OUTPUT_FILE_PATH}
-            ${INPUT_SOFT_FAIL}
-            ${INPUT_FRAMEWORK}
-        env:
-          INPUT_FILE: ${{ inputs.file }}
-          INPUT_DIRECTORY: ${{ inputs.directory }}
-          INPUT_COMPACT: ${{ inputs.compact }}
-          INPUT_QUIET: ${{ inputs.quiet }}
-          INPUT_OUTPUT_FORMAT: ${{ inputs.output_format }}
-          INPUT_OUTPUT_FILE_PATH: ${{ inputs.output_file_path }}
-          INPUT_SOFT_FAIL: ${{ inputs.soft_fail }}
-          INPUT_FRAMEWORK: ${{ inputs.framework }}
+    - name: Formating the results
+      run: |
+        jq --arg repoLink "${{ github.server_url }}/${{ github.repository }}" --arg branch "${{ github.ref == 'refs/heads/main' && 'main' || github.head_ref }}" '. += [{"details": {"repo": $repoLink, "branch": $branch}}]' results/results_json.json > temp.json && mv temp.json results.json
+      shell: bash
 
-      - name: Formating the results  
-        run: | 
-          jq --arg repoLink "${{ github.server_url }}/${{ github.repository }}" --arg branch "${{ github.ref == 'refs/heads/main' && 'main' || github.head_ref }}" '. += [{"details": {"repo": $repoLink, "branch": $branch}}]' results/results_json.json > temp.json && mv temp.json results.json
-        shell: bash
-
-
-      - name: Push report to CSPM panel
-        run: |
-          curl --location --request POST 'https://${{ inputs.endpoint }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=IAC&save_to_s3=false' --header 'Tenant-Id: ${{ inputs.tenant_id  }}' --header 'Authorization: Bearer ${{ inputs.token }}' --form 'file=@"results.json"'
-        shell: bash 
+    - name: Push report to CSPM panel
+      run: |
+        curl --location --request POST 'https://${{ inputs.endpoint }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=IAC&save_to_s3=false' --header 'Tenant-Id: ${{ inputs.tenant_id  }}' --header 'Authorization: Bearer ${{ inputs.token }}' --form 'file=@"results.json"'
+      shell: bash
