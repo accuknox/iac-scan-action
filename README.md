@@ -10,8 +10,6 @@
 | directory        | Directory with infrastructure code and/or package manager files to scan                                                   | Optional          | `.`                      |
 | compact          | Do not display code blocks in output                                                                                      | Optional          | -                        |
 | quiet            | Display only failed checks                                                                                                | Optional          | -                        |
-| output_format    | The format of the output. Options: cli, json, junitxml, github_failed_only, or sarif (comma-separated)                    | Optional          | `json`                   |
-| output_file_path | Path and name for the output file, needs to end with a comma for a single output format                                   | Optional          | ./results.json           |
 | soft_fail        | Do not return an error code if there are failed checks                                                                    | Optional          | -                        |
 | framework        | Run only on a specific infrastructure, values can be Kubernetes or Terraform.                                             | Optional(🚧)      | -                        |
 | skip_framework   | Skip a specific infrastructure                                                                                            | Optional(🚧)      | -                        |
