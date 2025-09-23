@@ -35,7 +35,7 @@ Before using this GitHub Action, ensure the following are in place:
 2. Navigate to **Settings → Tokens**.  
 3. Click **Create Token** and save the following values:  
    - `accuknox_token`  
-   - `tenant_id`  
+   - `tenant_id (Optional)`  
 4. *(Optional)* Create a label under **Dashboard → Labels** to tag scan results.  
 
 ---
@@ -48,7 +48,7 @@ Before using this GitHub Action, ensure the following are in place:
 | Secret Name | Description |
 |------------|-------------|
 | `TOKEN`    | Your AccuKnox API token for authentication |
-| `TENANT_ID`| Your AccuKnox tenant ID |
+| `TENANT_ID`| Your AccuKnox tenant ID (Optional) |
 | `ENDPOINT` | The AccuKnox API URL (e.g., `cspm.demo.accuknox.com`) |
 | `LABEL`    | Label used to tag and group scan results |
 
