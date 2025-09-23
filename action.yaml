@@ -102,3 +102,4 @@ runs:
         echo "Checkov scan failed. Exiting with failure."
         exit 1
       shell: bash
+
