@@ -82,12 +82,12 @@ jobs:
         uses: accuknox/iac-scan-action@v0.0.1
         with:
           directory: "."              # Optional: Directory to scan
-          compact: true               # Optional: Minimize output
+          compact: true               # Optional: Minimise output
           quiet: true                 # Optional: Show only failed checks
           output_format: json         # Optional: Format of output
           output_file_path: "./results.json" # Optional: Output file path
           token: ${{ secrets.TOKEN }}
-          tenant_id: ${{ secrets.TENANT_ID }}   # Optional
+          tenant_id: ${{ secrets.TENANT_ID }}   # Optional: Unique Identification
 
 ```
 
