@@ -90,7 +90,9 @@ jobs:
           tenant_id: ${{ secrets.TENANT_ID }}   # Optional
 
 
-## ⚙️ Configuration Options (Inputs)
+
+
+### ⚙️ Configuration Options (Inputs)
 
 | Input            | Description | Optional/Required | Default |
 |-----------------|------------|-----------------|---------|
