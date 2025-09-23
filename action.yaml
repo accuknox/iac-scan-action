@@ -36,7 +36,7 @@ inputs:
     required: true
   tenant_id:
     description: "The ID of the tenant associated with the CSPM panel."
-    required: true
+    required: false
   endpoint:
     description: "The URL of the CSPM panel to push the scan results to."
     required: true
