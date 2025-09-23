@@ -35,7 +35,7 @@ Before using this GitHub Action, ensure the following are in place:
 2. Navigate to **Settings → Tokens**.  
 3. Click **Create Token** and save the following values:  
    - `accuknox_token`  
-   - `tenant_id ' (Optional)  
+   - `tenant_id` (Optional)  
 4. *(Optional)* Create a label under **Dashboard → Labels** to tag scan results.  
 
 ---
