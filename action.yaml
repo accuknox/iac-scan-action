@@ -77,14 +77,14 @@ runs:
 
       continue-on-error: true
 
-    # - name: Formatting the results
-    #   run: |
-    #     jq --arg repoLink "${{ github.server_url }}/${{ github.repository }}" --arg branch "${{ github.ref_name }}" '. += [{"details": {"repo": $repoLink, "branch": $branch}}]' results/results_json.json > temp.json && mv temp.json results.json
-    #   shell: bash
+    - name: Formatting the results
+      run: |
+        jq --arg repoLink "${{ github.server_url }}/${{ github.repository }}" --arg branch "${{ github.ref_name }}" '. += [{"details": {"repo": $repoLink, "branch": $branch}}]' results/results_json.json > temp.json && mv temp.json results.json
+      shell: bash
 
     - name: Push report to CSPM panel
       run: |
-        curl --location --request POST 'https://${{ inputs.endpoint }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=IAC&label_id=${{ inputs.label }}&save_to_s3=true' --header 'Tenant-Id: ${{ inputs.tenant_id }}' --header 'Authorization: Bearer ${{ inputs.token }}' --form 'file=@"results.json"'
+        curl --location --request POST 'https://${{ inputs.endpoint }}/api/v1/artifact/?data_type=IAC&label_id=${{ inputs.label }}&save_to_s3=true' --header 'Tenant-Id: ${{ inputs.tenant_id }}' --header 'Authorization: Bearer ${{ inputs.token }}' --form 'file=@"results.json"'
       shell: bash
 
     - name: Capture Checkov exit code
