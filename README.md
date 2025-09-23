@@ -35,7 +35,6 @@ Before using this GitHub Action, ensure the following are in place:
 2. Navigate to **Settings → Tokens**.  
 3. Click **Create Token** and save the following values:  
    - `accuknox_token`  
-   - `tenant_id` (Optional)  
 4. *(Optional)* Create a label under **Dashboard → Labels** to tag scan results.  
 
 ---
@@ -48,7 +47,6 @@ Before using this GitHub Action, ensure the following are in place:
 | Secret Name | Description |
 |------------|-------------|
 | `TOKEN`    | Your AccuKnox API token for authentication |
-| `TENANT_ID`| Your AccuKnox tenant ID (Optional) |
 | `ENDPOINT` | The AccuKnox API URL (e.g., `cspm.demo.accuknox.com`) |
 | `LABEL`    | Label used to tag and group scan results |
 
@@ -87,8 +85,6 @@ jobs:
           output_format: json         # Optional: Format of output
           output_file_path: "./results.json" # Optional: Output file path
           token: ${{ secrets.TOKEN }}
-          tenant_id: ${{ secrets.TENANT_ID }}   # Optional: Unique Identification
-
 ```
 
 
@@ -104,7 +100,6 @@ jobs:
 | `framework`      | Limit scan to a specific framework: terraform, kubernetes, etc. (lowercase) | Optional | `all` |
 | `skip_framework` | Skip scanning of a specific framework. | Optional | — |
 | `token`          | API token for authenticating with AccuKnox SaaS. | Required | — |
-| `tenant_id`      | Your tenant ID from the AccuKnox Console. | Optional | — |
 | `endpoint`       | URL of the AccuKnox Console to push results. | Optional | `cspm.demo.accuknox.com` |
 | `label`          | Label used in AccuKnox SaaS to organise and identify scan results. | Required | — |
 | `output_format`  | Format of the output. Supported: json, cli, etc. | Optional | `cli` |
