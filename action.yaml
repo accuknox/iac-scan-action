@@ -1,17 +1,21 @@
 name: "AccuKnox IaC Scanner"
-description: "Run Scan against infrastructure as code using AccuKnox."
+description: "Run AccuKnox Infrastructure as Code (IaC) scan on the repository"
+author: "Vickydew1"
+branding:
+  icon: "shield"
+  color: "purple"
 
 inputs:
   scan_image:
-    description: "Docker image to use for the AccuKnox scanner."
+    description: "Docker image for AccuKnox scanner"
     required: false
     default: "public.ecr.aws/k9v9d5v2/accuknox-aspm-scanner:v0.13.4"
   file:
-    description: 'Specify a file for scanning; cannot be used with directory input. Filter runners by file type, e.g., ".tf" for Terraform.'
+    description: "Specific file to scan (optional)"
     required: false
     default: ""
   directory:
-    description: "Directory with infrastructure code and/or package manager files to scan"
+    description: "Directory to scan (optional)"
     required: false
     default: "."
   compact:
@@ -27,77 +31,68 @@ inputs:
     required: false
     default: true
   framework:
-    description: "Run only on a specific infrastructure, Supported: Kubernetes & Terraform"
+    description: "Framework to scan (Terraform/Kubernetes)"
     required: false
     default: ""
   skip_framework:
-    description: "Skip a specific infrastructure"
+    description: "Framework to skip"
     required: false
     default: ""
   token:
-    description: "The token for authenticating with the CSPM panel."
+    description: "AccuKnox authentication token"
     required: true
   tenant_id:
-    description: "The ID of the tenant associated with the CSPM panel."
+    description: "AccuKnox tenant ID (optional, only required for certain scans)"
     required: false
     default: ""
   endpoint:
-    description: "The URL of the CSPM panel to push the scan results to."
+    description: "CSPM panel URL"
     required: false
     default: "cspm.demo.accuknox.com"
   label:
-    description: "The label created in AccuKnox SaaS for associating scan results."
+    description: "Label for AccuKnox scan results"
     required: true
-
-branding:
-  icon: "shield"
-  color: "purple"
 
 runs:
   using: "composite"
   steps:
-    - name: Run AccuKnox IaC Scan
+    - name: Run AccuKnox IaC Scanner
       shell: bash
       run: |
-        # Build command arguments dynamically
+        # Build scanner command arguments
         CMD_ARGS=""
 
-        if [[ -n "${{ inputs.file }}" ]]; then
-          CMD_ARGS="$CMD_ARGS --file ${{ inputs.file }}"
-        fi
-
-        if [[ -n "${{ inputs.directory }}" ]]; then
-          CMD_ARGS="$CMD_ARGS --directory ${{ inputs.directory }}"
-        fi
-
-        if [[ "${{ inputs.compact }}" == "true" ]]; then
-          CMD_ARGS="$CMD_ARGS --compact"
-        fi
-
-        if [[ "${{ inputs.quiet }}" == "true" ]]; then
-          CMD_ARGS="$CMD_ARGS --quiet"
-        fi
-
-        if [[ -n "${{ inputs.framework }}" ]]; then
-          CMD_ARGS="$CMD_ARGS --framework ${{ inputs.framework }}"
-        fi
-
-        if [[ -n "${{ inputs.skip_framework }}" ]]; then
-          CMD_ARGS="$CMD_ARGS --skip-framework ${{ inputs.skip_framework }}"
-        fi
+        [ -n "${{ inputs.file }}" ] && CMD_ARGS="$CMD_ARGS --file ${{ inputs.file }}"
+        [ -n "${{ inputs.directory }}" ] && CMD_ARGS="$CMD_ARGS --directory ${{ inputs.directory }}"
+        [ "${{ inputs.compact }}" == "true" ] && CMD_ARGS="$CMD_ARGS --compact"
+        [ "${{ inputs.quiet }}" == "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
+        [ -n "${{ inputs.framework }}" ] && CMD_ARGS="$CMD_ARGS --framework ${{ inputs.framework }}"
+        [ -n "${{ inputs.skip_framework }}" ] && CMD_ARGS="$CMD_ARGS --skip-framework ${{ inputs.skip_framework }}"
 
         SOFTFAIL_ARG=""
-        if [[ "${{ inputs.soft_fail }}" == "true" ]]; then
-          SOFTFAIL_ARG="--softfail"
+        [ "${{ inputs.soft_fail }}" == "true" ] && SOFTFAIL_ARG="--softfail"
+
+        # Auto-detect repository info
+        REPO_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+        REPO_BRANCH="${GITHUB_REF_NAME}"
+
+        # Prepare environment variables
+        ENV_VARS="-e ACCUKNOX_TOKEN='${{ inputs.token }}' \
+                  -e ACCUKNOX_ENDPOINT='${{ inputs.endpoint }}' \
+                  -e ACCUKNOX_LABEL='${{ inputs.label }}'"
+
+        # Include tenant_id only if provided
+        if [ -n "${{ inputs.tenant_id }}" ]; then
+          ENV_VARS="$ENV_VARS -e ACCUKNOX_TENANT='${{ inputs.tenant_id }}'"
         fi
 
-        # Run the scanner
-        echo "Running AccuKnox scanner with args: $CMD_ARGS"
-        docker run --rm \
-          -e ACCUKNOX_TOKEN="${{ inputs.token }}" \
-          -e ACCUKNOX_ENDPOINT="${{ inputs.endpoint }}" \
-          -e ACCUKNOX_LABEL="${{ inputs.label }}" \
-          -v "${GITHUB_WORKSPACE}:/workspace" \
-          ${{ inputs.scan_image }} \
-          scan $SOFTFAIL_ARG iac --command "$CMD_ARGS" --container-mode
+        echo "Running AccuKnox IaC scan on repo $REPO_URL branch $REPO_BRANCH"
+
+        # Run the scanner Docker container
+        docker run --rm $ENV_VARS -v "${GITHUB_WORKSPACE}:/workspace" ${{ inputs.scan_image }} \
+          scan $SOFTFAIL_ARG iac \
+            --command "$CMD_ARGS" \
+            --container-mode \
+            --repo-url "$REPO_URL" \
+            --repo-branch "$REPO_BRANCH"
       continue-on-error: true
