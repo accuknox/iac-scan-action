@@ -95,7 +95,6 @@ runs:
         echo "Running AccuKnox scanner with args: $CMD_ARGS"
         docker run --rm \
           -e ACCUKNOX_TOKEN="${{ inputs.token }}" \
-          -e ACCUKNOX_TENANT="${{ inputs.tenant_id }}" \
           -e ACCUKNOX_ENDPOINT="${{ inputs.endpoint }}" \
           -e ACCUKNOX_LABEL="${{ inputs.label }}" \
           -v "${GITHUB_WORKSPACE}:/workspace" \
