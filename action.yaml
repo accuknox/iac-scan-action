@@ -53,7 +53,7 @@ runs:
         FRAMEWORK: ${{ inputs.framework }}
       run: |
         if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_TOKEN" ]; then
-          echo "ERROR: ACCUKNOX_ENDPOINT, ACCUKNOX_LABEL, and ACCUKNOX_TOKEN must be set!"
+          echo "ERROR: ACCUNOX_ENDPOINT, ACCUNOX_LABEL, and ACCUNOX_TOKEN must be set!"
           exit 1
         fi
 
@@ -68,18 +68,5 @@ runs:
         [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
         [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
 
-        SOFT_FAIL_ARG=""
-        if [ "$SOFT_FAIL" = "true" ]; then
-          SOFT_FAIL_ARG="--soft_fail"
-        fi
-
-
         echo "Running AccuKnox scan with CMD_ARGS: $CMD_ARGS"
         ./accuknox-aspm-scanner scan iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
-
-        # echo "Running AccuKnox scan with CMD_ARGS: $CMD_ARGS, SOFT_FAIL_ARG: $SOFT_FAIL_ARG"
-        # ./accuknox-aspm-scanner scan iac $SOFT_FAIL_ARG --command "$CMD_ARGS" \
-        #   --container-mode \
-        #   --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" \
-        #   --repo-branch "${GITHUB_REF#refs/heads/}"
-
