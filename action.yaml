@@ -70,8 +70,9 @@ runs:
 
         SOFT_FAIL_ARG=""
         if [ "$SOFT_FAIL" = "true" ]; then
-          SOFT_FAIL_ARG="--softfail"
+          SOFT_FAIL_ARG="--soft_fail"
         fi
+
 
         # echo "Running AccuKnox scan with CMD_ARGS: $CMD_ARGS"
         # ./accuknox-aspm-scanner scan iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
