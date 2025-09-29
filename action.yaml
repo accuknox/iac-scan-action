@@ -27,15 +27,18 @@ inputs:
     required: false
     default: true
   framework:
-    description: "Run only on a specific infrastructure. Supported: Kubernetes & Terraform"
+    description: "Run only on a specific infrastructure, Supported: Kubernetes & Terraform"
     required: false
     default: ""
   endpoint:
-    description: "CSPM panel URL"
+    description: "The URL of the CSPM panel to push the scan results to"
     required: false
     default: "cspm.demo.accuknox.com"
   label:
-    description: "Label for AccuKnox scan results"
+    description: "The label created in AccuKnox SaaS for associating scan results."
+    required: true
+  token:
+    description: "The token for authenticating with the CSPM panel"
     required: true
 
 runs:
@@ -44,25 +47,23 @@ runs:
     - name: Run AccuKnox IaC Scanner
       shell: bash
       env:
+        ACCUKNOX_ENDPOINT: ${{ inputs.endpoint }}
+        ACCUKNOX_TOKEN: ${{ inputs.token }}
+        ACCUKNOX_LABEL: ${{ inputs.label }}
         FILE: ${{ inputs.file }}
         DIRECTORY: ${{ inputs.directory }}
         COMPACT: ${{ inputs.compact }}
         QUIET: ${{ inputs.quiet }}
         SOFT_FAIL: ${{ inputs.soft_fail }}
         FRAMEWORK: ${{ inputs.framework }}
-        ENDPOINT: ${{ inputs.endpoint }}
-        LABEL: ${{ inputs.label }}
-        ACCUKNOX_TOKEN: ${{ secrets.TOKEN }}
       run: |
-        echo "Downloading AccuKnox ASPM Scanner v0.13.4..."
+        echo "Downloading AccuKnox ASPM Scanner..."
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
 
-        # Prepare soft-fail argument
         SOFT_FAIL_ARG=""
         [ "$SOFT_FAIL" = true ] && SOFT_FAIL_ARG="--softfail"
 
-        # Build CLI command arguments
         CMD_ARGS=""
         [ -n "$FILE" ] && CMD_ARGS="$CMD_ARGS --file $FILE"
         [ -n "$DIRECTORY" ] && CMD_ARGS="$CMD_ARGS --directory $DIRECTORY"
@@ -70,14 +71,9 @@ runs:
         [ "$QUIET" = true ] && CMD_ARGS="$CMD_ARGS --quiet"
         [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
 
-        # Detect repo URL and branch
         REPO_URL="--repo-url ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
         REPO_BRANCH="--repo-branch ${GITHUB_REF#refs/heads/}"
 
-        export ACCUKNOX_TOKEN
-        export ACCUKNOX_ENDPOINT="$ENDPOINT"
-        export ACCUKNOX_LABEL="$LABEL"
-
-        # Run the scanner
+        echo "Running AccuKnox scan with label: $ACCUNOX_LABEL on endpoint: $ACCUNOX_ENDPOINT"
         ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac $CMD_ARGS --container-mode $REPO_URL $REPO_BRANCH
       continue-on-error: true
