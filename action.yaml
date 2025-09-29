@@ -41,14 +41,14 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Install ASPM Scanner
+    - name: Run AccuKnox IaC Scanner
       shell: bash
       run: |
         echo "Downloading AccuKnox ASPM Scanner v0.13.4..."
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
 
-        # Build soft-fail argument
+        # Prepare soft-fail argument
         SOFT_FAIL="${{ inputs.soft_fail }}"
         SOFT_FAIL_ARG=""
         if [ "$SOFT_FAIL" = "true" ] || [ "$SOFT_FAIL" = "1" ]; then
@@ -67,7 +67,7 @@ runs:
         REPO_URL="--repo-url ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
         REPO_BRANCH="--repo-branch ${GITHUB_REF_NAME}"
 
-        # Export only required env variables
+        # Export only required environment variables
         export ACCUKNOX_ENDPOINT="${{ inputs.endpoint }}"
         export ACCUKNOX_LABEL="${{ inputs.label }}"
 
