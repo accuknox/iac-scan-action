@@ -6,16 +6,12 @@ branding:
   color: "purple"
 
 inputs:
-  scan_image:
-    description: "Docker image for AccuKnox scanner"
-    required: false
-    default: "public.ecr.aws/k9v9d5v2/accuknox-aspm-scanner:v0.13.4"
   file:
-    description: "Specific file to scan (optional)"
+    description: 'Specify a file for scanning; cannot be used with directory input. Filter runners by file type, e.g., ".tf" for Terraform.'
     required: false
     default: ""
   directory:
-    description: "Directory to scan (optional)"
+    description: 'Directory with infrastructure code and/or package manager files to scan'
     required: false
     default: "."
   compact:
@@ -31,20 +27,12 @@ inputs:
     required: false
     default: true
   framework:
-    description: "Framework to scan (Terraform/Kubernetes)"
-    required: false
-    default: ""
-  skip_framework:
-    description: "Framework to skip"
+    description: "Run only on a specific infrastructure, Supported: Kubernetes & Terraform"
     required: false
     default: ""
   token:
     description: "AccuKnox authentication token"
     required: true
-  tenant_id:
-    description: "AccuKnox tenant ID (optional, only required for certain scans)"
-    required: false
-    default: ""
   endpoint:
     description: "CSPM panel URL"
     required: false
@@ -59,40 +47,29 @@ runs:
     - name: Run AccuKnox IaC Scanner
       shell: bash
       run: |
-        # Build scanner command arguments
-        CMD_ARGS=""
+        # Download scanner binary
+        curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
+        chmod +x accuknox-aspm-scanner
 
-        [ -n "${{ inputs.file }}" ] && CMD_ARGS="$CMD_ARGS --file ${{ inputs.file }}"
-        [ -n "${{ inputs.directory }}" ] && CMD_ARGS="$CMD_ARGS --directory ${{ inputs.directory }}"
-        [ "${{ inputs.compact }}" == "true" ] && CMD_ARGS="$CMD_ARGS --compact"
-        [ "${{ inputs.quiet }}" == "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
-        [ -n "${{ inputs.framework }}" ] && CMD_ARGS="$CMD_ARGS --framework ${{ inputs.framework }}"
-        [ -n "${{ inputs.skip_framework }}" ] && CMD_ARGS="$CMD_ARGS --skip-framework ${{ inputs.skip_framework }}"
-
-        SOFTFAIL_ARG=""
-        [ "${{ inputs.soft_fail }}" == "true" ] && SOFTFAIL_ARG="--softfail"
-
-        # Auto-detect repository info
-        REPO_URL="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
-        REPO_BRANCH="${GITHUB_REF_NAME}"
-
-        # Prepare environment variables
-        ENV_VARS="-e ACCUKNOX_TOKEN='${{ inputs.token }}' \
-                  -e ACCUKNOX_ENDPOINT='${{ inputs.endpoint }}' \
-                  -e ACCUKNOX_LABEL='${{ inputs.label }}'"
-
-        # Include tenant_id only if provided
-        if [ -n "${{ inputs.tenant_id }}" ]; then
-          ENV_VARS="$ENV_VARS -e ACCUKNOX_TENANT='${{ inputs.tenant_id }}'"
+        # Prepare soft-fail argument
+        SOFT_FAIL="${{ inputs.soft_fail }}"
+        SOFT_FAIL_ARG=""
+        if [ "$SOFT_FAIL" = "true" ] || [ "$SOFT_FAIL" = "1" ]; then
+          SOFT_FAIL_ARG="--softfail"
         fi
 
-        echo "Running AccuKnox IaC scan on repo $REPO_URL branch $REPO_BRANCH"
+        # Build CLI command arguments
+        CMD_ARGS=""
+        [ -n "${{ inputs.file }}" ] && CMD_ARGS="$CMD_ARGS --file ${{ inputs.file }}"
+        [ -n "${{ inputs.directory }}" ] && CMD_ARGS="$CMD_ARGS --directory ${{ inputs.directory }}"
+        [ "${{ inputs.compact }}" = "true" ] && CMD_ARGS="$CMD_ARGS --compact"
+        [ "${{ inputs.quiet }}" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
+        [ -n "${{ inputs.framework }}" ] && CMD_ARGS="$CMD_ARGS --framework ${{ inputs.framework }}"
 
-        # Run the scanner Docker container
-        docker run --rm $ENV_VARS -v "${GITHUB_WORKSPACE}:/workspace" ${{ inputs.scan_image }} \
-          scan $SOFTFAIL_ARG iac \
-            --command "$CMD_ARGS" \
-            --container-mode \
-            --repo-url "$REPO_URL" \
-            --repo-branch "$REPO_BRANCH"
+        # Detect repo URL and branch automatically
+        REPO_URL="--repo-url ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
+        REPO_BRANCH="--repo-branch ${GITHUB_REF_NAME}"
+
+        echo "./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command \"$CMD_ARGS\" --container-mode $REPO_URL $REPO_BRANCH"
+        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode $REPO_URL $REPO_BRANCH
       continue-on-error: true
