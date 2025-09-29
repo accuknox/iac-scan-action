@@ -1,45 +1,49 @@
-name: "Accuknox IaC"
-description: "Run Scan against infrastructure as code."
+name: "AccuKnox IaC Scanner"
+description: "Run Scan against infrastructure as code using AccuKnox."
+
 inputs:
+  scan_image:
+    description: "Docker image to use for the AccuKnox scanner."
+    required: false
+    default: "public.ecr.aws/k9v9d5v2/accuknox-aspm-scanner:v0.9.1"
   file:
     description: 'Specify a file for scanning; cannot be used with directory input. Filter runners by file type, e.g., ".tf" for Terraform.'
     required: false
+    default: ""
   directory:
-    default: "."
     description: "Directory with infrastructure code and/or package manager files to scan"
     required: false
+    default: "."
   compact:
     description: "Do not display code blocks in output"
     required: false
+    default: true
   quiet:
     description: "Display only failed checks"
     required: false
-  output_format:
-    description: "The format of the output. cli, json, junitxml, github_failed_only, or sarif (comma separated)"
-    required: false
-    default: "json"
-  output_file_path:
-    description: "Path and name for output file, needs to end with a comma for a single output format"
-    required: false
-    default: "./results.json"
+    default: true
   soft_fail:
     description: "Do not return an error code if there are failed checks"
     required: false
+    default: true
   framework:
     description: "Run only on a specific infrastructure, Supported: Kubernetes & Terraform"
     required: false
+    default: ""
   skip_framework:
     description: "Skip a specific infrastructure"
     required: false
+    default: ""
   token:
     description: "The token for authenticating with the CSPM panel."
     required: true
   tenant_id:
     description: "The ID of the tenant associated with the CSPM panel."
     required: false
+    default: ""
   endpoint:
     description: "The URL of the CSPM panel to push the scan results to."
-    required: true
+    required: false
     default: "cspm.demo.accuknox.com"
   label:
     description: "The label created in AccuKnox SaaS for associating scan results."
@@ -52,53 +56,49 @@ branding:
 runs:
   using: "composite"
   steps:
-    - name: Run Checkov IaC Scan
-      id: checkov-scan
-      uses: docker://ghcr.io/bridgecrewio/checkov:3.2.21
-      with:
-        args: |
-          ${INPUT_FILE}
-          ${INPUT_DIRECTORY}
-          ${INPUT_COMPACT}
-          ${INPUT_QUIET}
-          ${INPUT_OUTPUT_FORMAT}
-          ${INPUT_OUTPUT_FILE_PATH}
-          ${INPUT_SOFT_FAIL}
-          ${INPUT_FRAMEWORK}
-      env:
-        INPUT_FILE: ${{ inputs.file }}
-        INPUT_DIRECTORY: ${{ inputs.directory }}
-        INPUT_COMPACT: ${{ inputs.compact }}
-        INPUT_QUIET: ${{ inputs.quiet }}
-        INPUT_OUTPUT_FORMAT: ${{ inputs.output_format }}
-        INPUT_OUTPUT_FILE_PATH: ${{ inputs.output_file_path }}
-        INPUT_SOFT_FAIL: ${{ inputs.soft_fail }}
-        INPUT_FRAMEWORK: ${{ inputs.framework }}
-
-      continue-on-error: true
-
-    - name: Formatting the results
-      run: |
-        jq --arg repoLink "${{ github.server_url }}/${{ github.repository }}" --arg branch "${{ github.ref_name }}" '. += [{"details": {"repo": $repoLink, "branch": $branch}}]' results/results_json.json > temp.json && mv temp.json results.json
+    - name: Run AccuKnox IaC Scan
       shell: bash
-
-    - name: Push report to CSPM panel
       run: |
-        curl --location --request POST 'https://${{ inputs.endpoint }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=IAC&label_id=${{ inputs.label }}&save_to_s3=true' --header 'Tenant-Id: ${{ inputs.tenant_id }}' --header 'Authorization: Bearer ${{ inputs.token }}' --form 'file=@"results.json"'
-      shell: bash
+        # Build command arguments dynamically
+        CMD_ARGS=""
 
-    - name: Capture Checkov exit code
-      id: capture-exit-code
-      run: |
-        echo "Checkov exit code: ${{ steps.checkov-scan.outcome }}"
-        if [ "${{ steps.checkov-scan.outcome }}" == "failure" ]; then
-          echo "checkov_failed=true" >> $GITHUB_ENV
+        if [[ -n "${{ inputs.file }}" ]]; then
+          CMD_ARGS="$CMD_ARGS --file ${{ inputs.file }}"
         fi
-      shell: bash
 
-    - name: Fail pipeline at the end if Checkov scan failed
-      if: env.checkov_failed == 'true'
-      run: |
-        echo "Checkov scan failed. Exiting with failure."
-        exit 1
-      shell: bash
+        if [[ -n "${{ inputs.directory }}" ]]; then
+          CMD_ARGS="$CMD_ARGS --directory ${{ inputs.directory }}"
+        fi
+
+        if [[ "${{ inputs.compact }}" == "true" ]]; then
+          CMD_ARGS="$CMD_ARGS --compact"
+        fi
+
+        if [[ "${{ inputs.quiet }}" == "true" ]]; then
+          CMD_ARGS="$CMD_ARGS --quiet"
+        fi
+
+        if [[ -n "${{ inputs.framework }}" ]]; then
+          CMD_ARGS="$CMD_ARGS --framework ${{ inputs.framework }}"
+        fi
+
+        if [[ -n "${{ inputs.skip_framework }}" ]]; then
+          CMD_ARGS="$CMD_ARGS --skip-framework ${{ inputs.skip_framework }}"
+        fi
+
+        SOFTFAIL_ARG=""
+        if [[ "${{ inputs.soft_fail }}" == "true" ]]; then
+          SOFTFAIL_ARG="--softfail"
+        fi
+
+        # Run the scanner
+        echo "Running AccuKnox scanner with args: $CMD_ARGS"
+        docker run --rm \
+          -e ACCUKNOX_TOKEN="${{ inputs.token }}" \
+          -e ACCUKNOX_TENANT="${{ inputs.tenant_id }}" \
+          -e ACCUKNOX_ENDPOINT="${{ inputs.endpoint }}" \
+          -e ACCUKNOX_LABEL="${{ inputs.label }}" \
+          -v "${GITHUB_WORKSPACE}:/workspace" \
+          ${{ inputs.scan_image }} \
+          scan $SOFTFAIL_ARG iac --command "$CMD_ARGS" --container-mode
+      continue-on-error: true
