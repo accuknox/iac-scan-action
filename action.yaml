@@ -51,9 +51,7 @@ runs:
         # Prepare soft-fail argument
         SOFT_FAIL="${{ inputs.soft_fail }}"
         SOFT_FAIL_ARG=""
-        if [ "$SOFT_FAIL" = "true" ] || [ "$SOFT_FAIL" = "1" ]; then
-          SOFT_FAIL_ARG="--softfail"
-        fi
+        [ "$SOFT_FAIL" = "true" ] && SOFT_FAIL_ARG="--softfail"
 
         # Build CLI command arguments
         CMD_ARGS=""
@@ -67,10 +65,10 @@ runs:
         REPO_URL="--repo-url ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
         REPO_BRANCH="--repo-branch ${GITHUB_REF_NAME}"
 
-        # Export only required environment variables
+        # Export environment variables (token from secrets)
+        export ACCUKNOX_TOKEN="${{ secrets.TOKEN }}"
         export ACCUKNOX_ENDPOINT="${{ inputs.endpoint }}"
         export ACCUKNOX_LABEL="${{ inputs.label }}"
 
-        echo "./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command \"$CMD_ARGS\" --container-mode $REPO_URL $REPO_BRANCH"
         ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode $REPO_URL $REPO_BRANCH
       continue-on-error: true
