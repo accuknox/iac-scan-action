@@ -37,38 +37,43 @@ inputs:
   label:
     description: "Label for AccuKnox scan results"
     required: true
-
-runs:
+    
+  runs:
   using: "composite"
   steps:
     - name: Run AccuKnox IaC Scanner
       shell: bash
+      env:
+        FILE: ${{ inputs.file }}
+        DIRECTORY: ${{ inputs.directory }}
+        COMPACT: ${{ inputs.compact }}
+        QUIET: ${{ inputs.quiet }}
+        SOFT_FAIL: ${{ inputs.soft_fail }}
+        FRAMEWORK: ${{ inputs.framework }}
+        ENDPOINT: ${{ inputs.endpoint }}
+        LABEL: ${{ inputs.label }}
+        ACCUKNOX_TOKEN: ${{ secrets.TOKEN }}
       run: |
         echo "Downloading AccuKnox ASPM Scanner v0.13.4..."
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
 
-        # Prepare soft-fail argument
-        SOFT_FAIL="${{ inputs.soft_fail }}"
         SOFT_FAIL_ARG=""
         [ "$SOFT_FAIL" = "true" ] && SOFT_FAIL_ARG="--softfail"
 
-        # Build CLI command arguments
         CMD_ARGS=""
-        [ -n "${{ inputs.file }}" ] && CMD_ARGS="$CMD_ARGS --file ${{ inputs.file }}"
-        [ -n "${{ inputs.directory }}" ] && CMD_ARGS="$CMD_ARGS --directory ${{ inputs.directory }}"
-        [ "${{ inputs.compact }}" = "true" ] && CMD_ARGS="$CMD_ARGS --compact"
-        [ "${{ inputs.quiet }}" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
-        [ -n "${{ inputs.framework }}" ] && CMD_ARGS="$CMD_ARGS --framework ${{ inputs.framework }}"
+        [ -n "$FILE" ] && CMD_ARGS="$CMD_ARGS --file $FILE"
+        [ -n "$DIRECTORY" ] && CMD_ARGS="$CMD_ARGS --directory $DIRECTORY"
+        [ "$COMPACT" = "true" ] && CMD_ARGS="$CMD_ARGS --compact"
+        [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
+        [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
 
-        # Detect repo URL and branch automatically
         REPO_URL="--repo-url ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
-        REPO_BRANCH="--repo-branch ${GITHUB_REF_NAME}"
+        REPO_BRANCH="--repo-branch ${GITHUB_REF#refs/heads/}"
 
-        # Export environment variables (token from secrets)
-        export ACCUKNOX_TOKEN="${{ secrets.TOKEN }}"
-        export ACCUKNOX_ENDPOINT="${{ inputs.endpoint }}"
-        export ACCUKNOX_LABEL="${{ inputs.label }}"
+        export ACCUKNOX_TOKEN="$TOKEN"
+        export ACCUKNOX_ENDPOINT="$ENDPOINT"
+        export ACCUKNOX_LABEL="$LABEL"
 
-        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode $REPO_URL $REPO_BRANCH
+        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac $CMD_ARGS --container-mode $REPO_URL $REPO_BRANCH
       continue-on-error: true
