@@ -47,6 +47,12 @@ runs:
     - name: Run AccuKnox IaC Scanner
       shell: bash
       run: |
+        # Fail early if required inputs are empty
+        if [ -z "${{ inputs.token }}" ] || [ -z "${{ inputs.endpoint }}" ] || [ -z "${{ inputs.label }}" ]; then
+          echo "ERROR: token, endpoint, and label inputs must be provided and non-empty."
+          exit 1
+        fi
+
         # Download scanner binary
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
@@ -69,6 +75,11 @@ runs:
         # Detect repo URL and branch automatically
         REPO_URL="--repo-url ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
         REPO_BRANCH="--repo-branch ${GITHUB_REF_NAME}"
+
+        # Set environment variables for scanner
+        export ACCUKNOX_TOKEN="${{ inputs.token }}"
+        export ACCUKNOX_ENDPOINT="${{ inputs.endpoint }}"
+        export ACCUKNOX_LABEL="${{ inputs.label }}"
 
         echo "./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command \"$CMD_ARGS\" --container-mode $REPO_URL $REPO_BRANCH"
         ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode $REPO_URL $REPO_BRANCH
