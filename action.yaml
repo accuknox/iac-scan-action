@@ -30,9 +30,6 @@ inputs:
     description: "Run only on a specific infrastructure, Supported: Kubernetes & Terraform"
     required: false
     default: ""
-  token:
-    description: "AccuKnox authentication token"
-    required: true
   endpoint:
     description: "CSPM panel URL"
     required: false
@@ -44,20 +41,14 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: Run AccuKnox IaC Scanner
+    - name: Install ASPM Scanner
       shell: bash
       run: |
-        # Fail early if required inputs are empty
-        if [ -z "${{ inputs.token }}" ] || [ -z "${{ inputs.endpoint }}" ] || [ -z "${{ inputs.label }}" ]; then
-          echo "ERROR: token, endpoint, and label inputs must be provided and non-empty."
-          exit 1
-        fi
-
-        # Download scanner binary
+        echo "Downloading AccuKnox ASPM Scanner v0.13.4..."
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
 
-        # Prepare soft-fail argument
+        # Build soft-fail argument
         SOFT_FAIL="${{ inputs.soft_fail }}"
         SOFT_FAIL_ARG=""
         if [ "$SOFT_FAIL" = "true" ] || [ "$SOFT_FAIL" = "1" ]; then
@@ -76,8 +67,7 @@ runs:
         REPO_URL="--repo-url ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git"
         REPO_BRANCH="--repo-branch ${GITHUB_REF_NAME}"
 
-        # Set environment variables for scanner
-        export ACCUKNOX_TOKEN="${{ inputs.token }}"
+        # Export only required env variables
         export ACCUKNOX_ENDPOINT="${{ inputs.endpoint }}"
         export ACCUKNOX_LABEL="${{ inputs.label }}"
 
