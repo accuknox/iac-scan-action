@@ -142,9 +142,10 @@ runs:
         [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
         [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
 
-        # Soft fail argument
-        [ "$SOFT_FAIL" = "true" ] && CMD_ARGS="$CMD_ARGS --soft-fail-on iac"
-
-        echo "Running AccuKnox scan with CMD_ARGS: $CMD_ARGS"
-        ./accuknox-aspm-scanner scan iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
+       echo "Running AccuKnox scan..."
+        if [ "$SOFT_FAIL" = "true" ]; then
+          ./accuknox-aspm-scanner scan iac $CMD_ARGS --soft-fail-on iac --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
+        else
+          ./accuknox-aspm-scanner scan iac $CMD_ARGS --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
+        fi
 
