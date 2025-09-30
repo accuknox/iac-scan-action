@@ -21,7 +21,7 @@ inputs:
   soft_fail:
     description: "Do not return an error code if there are failed checks"
     required: false
-    default: true
+    default: false
   framework:
     description: "Run only on a specific infrastructure, Kubernetes or Terraform"
     required: false
