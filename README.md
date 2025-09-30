@@ -34,7 +34,7 @@ Before using this GitHub Action, ensure the following are in place:
 1. Log in to your AccuKnox Console.  
 2. Navigate to **Settings → Tokens**.  
 3. Click **Create Token** and save the following value:  
-   - `accuknox_token`  
+   - `Accuknox_token`  
 4. *(Optional)* Create a label under **Dashboard → Labels** to tag scan results.  
 
 ---
@@ -46,9 +46,9 @@ Before using this GitHub Action, ensure the following are in place:
 
 | Secret Name | Description |
 |------------|-------------|
-| `TOKEN`    | Your AccuKnox API token for authentication |
-| `ENDPOINT` | The AccuKnox API URL (e.g., `cspm.demo.accuknox.com`) |
-| `LABEL`    | Label used to tag and group scan results |
+| `ACCUKNOX_TOKEN`    | Your AccuKnox API token for authentication |
+| `ACCUKNOX_ENDPOINT` | The AccuKnox API URL (e.g., `cspm.demo.accuknox.com`) |
+| `ACCUKNOX_LABEL`    | Label used to tag and group scan results |
 
 These secrets are required to authenticate the scan and send results to your AccuKnox SaaS dashboard.
 
@@ -79,11 +79,11 @@ jobs:
       - name: Run IaC scan
         uses: accuknox/iac-scan-action@v0.0.1
         with:
-          directory: "."              # Optional: Directory to scan
-          compact: true               # Optional: Minimize output
-          quiet: true                 # Optional: Show only failed checks
-          output_format: json         # Optional: Format of output
-          output_file_path: "./results.json" # Optional: Output file path
+          directory: "."                            # Optional: Directory to scan
+          compact: true                             # Optional: Minimise output
+          quiet: true                               # Optional: Show only failed checks
+          output_format: json                       # Optional: Format of output
+          output_file_path: "./results.json"        # Optional: Output file path
           token: ${{ secrets.TOKEN }}
           endpoint: ${{ secrets.ENDPOINT }}
           label: ${{ secrets.LABEL }}
@@ -102,7 +102,7 @@ jobs:
 | `skip_framework` | Skip scanning of a specific framework. | Optional | — |
 | `token`          | API token for authenticating with AccuKnox SaaS. | Required | — |
 | `endpoint`       | URL of the AccuKnox Console to push results. | Optional | `cspm.demo.accuknox.com` |
-| `label`          | Label used in AccuKnox SaaS to organize and identify scan results. | Required | — |
+| `label`          | Label used in AccuKnox SaaS to organise and identify scan results. | Required | — |
 | `output_format`  | Format of the output. Supported: json, cli, etc. | Optional | `cli` |
 | `output_file_path` | File path to write output results to. | Optional | — |
 | `baseline`       | Path to a baseline file to suppress known findings | Optional | `baseline` |
