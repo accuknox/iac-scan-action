@@ -21,7 +21,7 @@ inputs:
   soft_fail:
     description: "Do not return an error code if there are failed checks"
     required: false
-    default: true
+    default: false
   framework:
     description: "Run only on a specific infrastructure, Kubernetes or Terraform"
     required: false
@@ -69,4 +69,4 @@ runs:
         [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
 
         echo "Running AccuKnox scan with CMD_ARGS: $CMD_ARGS"
-        ./accuknox-aspm-scanner scan iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL
+        ./accuknox-aspm-scanner scan iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
