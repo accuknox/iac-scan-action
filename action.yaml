@@ -7,7 +7,7 @@ inputs:
     required: false
     default: "."
   file:
-    description: 'Specific file for scanning (mutually exclusive with directory)'
+    description: 'Specify a file for scanning; cannot be used with directory input.'
     required: false
     default: ""
   compact:
@@ -19,15 +19,15 @@ inputs:
     required: false
     default: true
   soft_fail:
-    description: "If true, do not fail the workflow on detected vulnerabilities"
+    description: "Do not return an error code if there are failed checks"
     required: false
     default: true
   framework:
-    description: "Filter scan by framework (terraform,kubernetes)"
+    description: "Run only on a specific infrastructure, Kubernetes or Terraform"
     required: false
     default: ""
   endpoint:
-    description: "AccuKnox endpoint URL (used by the action to upload results)"
+    description: "CSPM panel endpoint URL"
     required: true
   label:
     description: "Label in AccuKnox SaaS for scan results"
@@ -52,106 +52,21 @@ runs:
         SOFT_FAIL: ${{ inputs.soft_fail }}
         FRAMEWORK: ${{ inputs.framework }}
       run: |
-        set -euo pipefail
-
-        # Required secrets/inputs sanity-check
-        if [ -z "${ACCUKNOX_ENDPOINT:-}" ] || [ -z "${ACCUKNOX_LABEL:-}" ] || [ -z "${ACCUKNOX_TOKEN:-}" ]; then
-          echo "ERROR: ACCUKNOX_ENDPOINT, ACCUKNOX_LABEL, and ACCUKNOX_TOKEN must be set!"
+        if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_TOKEN" ]; then
+          echo "ERROR: ACCUNOX_ENDPOINT, ACCUNOX_LABEL, and ACCUNOX_TOKEN must be set!"
           exit 1
         fi
 
         echo "Downloading AccuKnox ASPM Scanner..."
-        curl -sSL https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
+        curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
-        echo "Scanner downloaded: $(./accuknox-aspm-scanner --version || echo 'version-check-failed')"
 
-        # Build command parts in an array to avoid quoting issues
-        declare -a PARTS=()
+        CMD_ARGS=""
+        [ -n "$FILE" ] && CMD_ARGS="$CMD_ARGS --file $FILE"
+        [ -n "$DIRECTORY" ] && CMD_ARGS="$CMD_ARGS --directory $DIRECTORY"
+        [ "$COMPACT" = "true" ] && CMD_ARGS="$CMD_ARGS --compact"
+        [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
+        [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
 
-        # Must ensure at least one of file OR directory is provided. If both empty, default to directory "."
-        if [ -n "${FILE:-}" ]; then
-          PARTS+=( --file "$FILE" )
-        else
-          # ensure DIRECTORY defaults to "." if input empty
-          DIR="${DIRECTORY:-.}"
-          if [ -z "$DIR" ]; then
-            DIR="."
-          fi
-          PARTS+=( --directory "$DIR" )
-        fi
-
-        # Add optional flags
-        if [ "${COMPACT:-false}" = "true" ]; then
-          PARTS+=( --compact )
-        fi
-        if [ "${QUIET:-false}" = "true" ]; then
-          PARTS+=( --quiet )
-        fi
-        if [ -n "${FRAMEWORK:-}" ]; then
-          PARTS+=( --framework "$FRAMEWORK" )
-        fi
-
-        # soft-fail must be part of the inner command string (the scanner requires --command)
-        if [ "${SOFT_FAIL:-false}" = "true" ]; then
-          PARTS+=( --soft-fail-on iac )
-        fi
-
-        # Join PARTS into one space-separated string; careful with quoting
-        INNER_CMD=""
-        for p in "${PARTS[@]}"; do
-          # escape embedded double quotes
-          p_escaped="${p//\"/\\\"}"
-          if [ -z "$INNER_CMD" ]; then
-            INNER_CMD="$p_escaped"
-          else
-            INNER_CMD="$INNER_CMD $p_escaped"
-          fi
-        done
-
-        # Final sanity: INNER_CMD must be non-empty
-        if [ -z "$INNER_CMD" ]; then
-          echo "ERROR: internal command is empty (this should not happen)."
-          exit 1
-        fi
-
-        echo "Prepared inner command for scanner: $INNER_CMD"
-
-        # Retry wrapper to mitigate transient image-pull / registry errors
-        TRY=0
-        MAX_TRIES=3
-        SLEEP=8
-        while [ $TRY -lt $MAX_TRIES ]; do
-          TRY=$((TRY+1))
-          echo "Starting accuknox-aspm-scanner (attempt $TRY/$MAX_TRIES)..."
-          ./accuknox-aspm-scanner scan iac --command "$INNER_CMD" \
-            --container-mode \
-            --repo-url "${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}.git" \
-            --repo-branch "${GITHUB_REF#refs/heads/}" && SCAN_EXIT=0 || SCAN_EXIT=$?
-
-          # If successful, break
-          if [ "$SCAN_EXIT" -eq 0 ]; then
-            echo "Scanner completed successfully (exit code 0)."
-            break
-          fi
-
-          # On container pull rate-limit / transient errors, try again
-          echo "Scanner exit code: $SCAN_EXIT"
-          if [ $TRY -lt $MAX_TRIES ]; then
-            echo "Retrying in $SLEEP seconds..."
-            sleep $SLEEP
-            continue
-          else
-            echo "Max retries reached. Last scanner exit code: $SCAN_EXIT"
-            break
-          fi
-        done
-
-        # If soft_fail is true we do NOT fail the action even if scanner returned non-zero.
-        if [ "${SOFT_FAIL:-false}" = "true" ]; then
-          echo "soft_fail=true — ignoring scanner exit code ${SCAN_EXIT:-1} and continuing with success"
-          exit 0
-        fi
-
-        # Otherwise propagate scanner exit code
-        exit ${SCAN_EXIT:-1}
-
+        echo "Running AccuKnox scan with CMD_ARGS: $CMD_ARGS"
+        ./accuknox-aspm-scanner scan iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL
