@@ -149,7 +149,7 @@ runs:
         fi
 
         echo "Running AccuKnox scan with CMD_ARGS: $CMD_ARGS $SOFT_FAIL_ARG"
-        ./accuknox-aspm-scanner scan iac $CMD_ARGS $SOFT_FAIL_ARG \
+        ./accuknox-aspm-scanner scan iac --command "$CMD_ARGS $SOFT_FAIL_ARG" \
           --container-mode \
           --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" \
           --repo-branch "${GITHUB_REF#refs/heads/}"
