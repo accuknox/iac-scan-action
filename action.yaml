@@ -72,7 +72,6 @@
 #         ./accuknox-aspm-scanner scan iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
 
 
-
 name: "AccuKnox IaC Scanner"
 description: "Run AccuKnox Infrastructure as Code (IaC) scan on the repository"
 
@@ -94,7 +93,7 @@ inputs:
     required: false
     default: true
   soft_fail:
-    description: "Do not fail workflow if vulnerabilities are found"
+    description: "Do not return an error code if there are failed checks"
     required: false
     default: true
   framework:
@@ -143,10 +142,8 @@ runs:
         [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
         [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
 
-        # Append softfail argument dynamically if user enabled it
-        if [ "$SOFT_FAIL" = "true" ]; then
-          CMD_ARGS="$CMD_ARGS --softfail"
-        fi
+        # Soft fail argument
+        [ "$SOFT_FAIL" = "true" ] && CMD_ARGS="$CMD_ARGS --soft-fail-on iac"
 
         echo "Running AccuKnox scan with CMD_ARGS: $CMD_ARGS"
         ./accuknox-aspm-scanner scan iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
