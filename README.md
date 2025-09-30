@@ -84,6 +84,7 @@ jobs:
           quiet: true                               # Optional: Show only failed checks
           output_format: json                       # Optional: Format of output
           output_file_path: "./results.json"        # Optional: Output file path
+          soft_fail: true                           # Optional: Will continue after found vulnerability 
           token: ${{ secrets.TOKEN }}
           endpoint: ${{ secrets.ENDPOINT }}
           label: ${{ secrets.LABEL }}
