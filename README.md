@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@main
 
       - name: Run IaC scan
         uses: accuknox/iac-scan-action@v0.0.1
