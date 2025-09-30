@@ -35,7 +35,7 @@ Before using this GitHub Action, ensure the following are in place:
 2. Navigate to **Settings → Tokens**.  
 3. Click **Create Token** and save the following value:  
    - `Accuknox_token`  
-4. *(Optional)* Create a label under **Dashboard → Labels** to tag scan results.  
+4. Create a label under **Dashboard → Labels** to tag scan results.  
 
 ---
 
