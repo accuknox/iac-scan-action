@@ -81,7 +81,7 @@ inputs:
     required: false
     default: "."
   file:
-    description: 'Specify a file for scanning; cannot be used with directory input.'
+    description: 'Specific file for scanning'
     required: false
     default: ""
   compact:
@@ -93,15 +93,15 @@ inputs:
     required: false
     default: true
   soft_fail:
-    description: "Do not return an error code if there are failed checks"
+    description: "Do not fail workflow if vulnerabilities are found"
     required: false
     default: true
   framework:
-    description: "Run only on a specific infrastructure, Kubernetes or Terraform"
+    description: "Filter scan by framework (terraform,kubernetes)"
     required: false
     default: ""
   endpoint:
-    description: "CSPM panel endpoint URL"
+    description: "AccuKnox endpoint URL"
     required: true
   label:
     description: "Label in AccuKnox SaaS for scan results"
@@ -126,6 +126,7 @@ runs:
         SOFT_FAIL: ${{ inputs.soft_fail }}
         FRAMEWORK: ${{ inputs.framework }}
       run: |
+        set -e
         if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_TOKEN" ]; then
           echo "ERROR: ACCUKNOX_ENDPOINT, ACCUKNOX_LABEL, and ACCUKNOX_TOKEN must be set!"
           exit 1
@@ -142,10 +143,13 @@ runs:
         [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
         [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
 
-       echo "Running AccuKnox scan..."
+        SOFT_FAIL_ARG=""
         if [ "$SOFT_FAIL" = "true" ]; then
-          ./accuknox-aspm-scanner scan iac $CMD_ARGS --soft-fail-on iac --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
-        else
-          ./accuknox-aspm-scanner scan iac $CMD_ARGS --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
+          SOFT_FAIL_ARG="--soft-fail-on iac"
         fi
 
+        echo "Running AccuKnox scan with CMD_ARGS: $CMD_ARGS $SOFT_FAIL_ARG"
+        ./accuknox-aspm-scanner scan iac $CMD_ARGS $SOFT_FAIL_ARG \
+          --container-mode \
+          --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" \
+          --repo-branch "${GITHUB_REF#refs/heads/}"
