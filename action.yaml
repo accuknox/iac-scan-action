@@ -1,41 +1,3 @@
-name: "AccuKnox IaC Scanner"
-description: "Run AccuKnox Infrastructure as Code (IaC) scan on the repository"
-
-inputs:
-  directory:
-    description: 'Directory with infrastructure code to scan'
-    required: false
-    default: "."
-  file:
-    description: 'Specific file for scanning'
-    required: false
-    default: ""
-  compact:
-    description: "Do not display code blocks in output"
-    required: false
-    default: true
-  quiet:
-    description: "Display only failed checks"
-    required: false
-    default: true
-  soft_fail:
-    description: "Enable soft fail for IaC scan"
-    required: false
-    default: true
-  framework:
-    description: "Filter scan by framework (terraform,kubernetes)"
-    required: false
-    default: ""
-  endpoint:
-    description: "AccuKnox endpoint URL"
-    required: true
-  label:
-    description: "Label in AccuKnox SaaS for scan results"
-    required: true
-  token:
-    description: "Token for authenticating with CSPM panel"
-    required: true
-
 runs:
   using: "composite"
   steps:
@@ -53,11 +15,6 @@ runs:
         FRAMEWORK: ${{ inputs.framework }}
       run: |
         set -e
-        if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_TOKEN" ]; then
-          echo "ERROR: ACCUKNOX_ENDPOINT, ACCUKNOX_LABEL, and ACCUKNOX_TOKEN must be set!"
-          exit 1
-        fi
-
         echo "Downloading AccuKnox ASPM Scanner..."
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
@@ -69,13 +26,11 @@ runs:
         [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
         [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
 
-        if [ "$SOFT_FAIL" = "true" ]; then
-          CMD_ARGS="$CMD_ARGS --soft-fail-on iac"
-        fi
+        SOFT_FAIL_ARG=""
+        [ "$SOFT_FAIL" = "true" ] && SOFT_FAIL_ARG="--soft-fail-on iac"
 
-        echo "Running AccuKnox scan with CMD_ARGS: $CMD_ARGS"
-        ./accuknox-aspm-scanner scan iac \
-          --command "$CMD_ARGS" \
+        echo "Running AccuKnox IaC scan..."
+        ./accuknox-aspm-scanner scan iac $CMD_ARGS $SOFT_FAIL_ARG \
           --container-mode \
           --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" \
           --repo-branch "${GITHUB_REF#refs/heads/}"
