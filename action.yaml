@@ -53,7 +53,7 @@ runs:
         FRAMEWORK: ${{ inputs.framework }}
       run: |
         if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_TOKEN" ]; then
-          echo "ERROR: ACCUNOX_ENDPOINT, ACCUNOX_LABEL, and ACCUNOX_TOKEN must be set!"
+          echo "ERROR: ACCUKNOX_ENDPOINT, ACCUKNOX_LABEL, and ACCUKNOX_TOKEN must be set!"
           exit 1
         fi
 
