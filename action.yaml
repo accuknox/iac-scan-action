@@ -1,104 +1,76 @@
-name: "Accuknox IaC"
-description: "Run Scan against infrastructure as code."
+name: "AccuKnox IaC Scanner"
+description: "Run AccuKnox Infrastructure as Code (IaC) scan on the repository"
+
 inputs:
-  file:
-    description: 'Specify a file for scanning; cannot be used with directory input. Filter runners by file type, e.g., ".tf" for Terraform.'
-    required: false
   directory:
-    default: "."
-    description: "Directory with infrastructure code and/or package manager files to scan"
+    description: 'Directory with infrastructure code to scan'
     required: false
+    default: "."
+  file:
+    description: 'Specify a file for scanning; cannot be used with directory input.'
+    required: false
+    default: ""
   compact:
     description: "Do not display code blocks in output"
     required: false
+    default: true
   quiet:
     description: "Display only failed checks"
     required: false
-  output_format:
-    description: "The format of the output. cli, json, junitxml, github_failed_only, or sarif (comma separated)"
-    required: false
-    default: "json"
-  output_file_path:
-    description: "Path and name for output file, needs to end with a comma for a single output format"
-    required: false
-    default: "./results.json"
+    default: true
   soft_fail:
     description: "Do not return an error code if there are failed checks"
     required: false
+    default: false
   framework:
-    description: "Run only on a specific infrastructure, Supported: Kubernetes & Terraform"
+    description: "Run only on a specific infrastructure, Kubernetes or Terraform"
     required: false
-  skip_framework:
-    description: "Skip a specific infrastructure"
-    required: false
-  token:
-    description: "The token for authenticating with the CSPM panel."
-    required: true
-  tenant_id:
-    description: "The ID of the tenant associated with the CSPM panel."
-    required: false
+    default: ""
   endpoint:
-    description: "The URL of the CSPM panel to push the scan results to."
+    description: "CSPM panel endpoint URL"
     required: true
-    default: "cspm.demo.accuknox.com"
   label:
-    description: "The label created in AccuKnox SaaS for associating scan results."
+    description: "Label in AccuKnox SaaS for scan results"
     required: true
-
-branding:
-  icon: "shield"
-  color: "purple"
+  token:
+    description: "Token for authenticating with CSPM panel"
+    required: true
 
 runs:
   using: "composite"
   steps:
-    - name: Run Checkov IaC Scan
-      id: checkov-scan
-      uses: docker://ghcr.io/bridgecrewio/checkov:3.2.21
-      with:
-        args: |
-          ${INPUT_FILE}
-          ${INPUT_DIRECTORY}
-          ${INPUT_COMPACT}
-          ${INPUT_QUIET}
-          ${INPUT_OUTPUT_FORMAT}
-          ${INPUT_OUTPUT_FILE_PATH}
-          ${INPUT_SOFT_FAIL}
-          ${INPUT_FRAMEWORK}
+    - name: Run AccuKnox IaC Scanner
+      shell: bash
       env:
-        INPUT_FILE: ${{ inputs.file }}
-        INPUT_DIRECTORY: ${{ inputs.directory }}
-        INPUT_COMPACT: ${{ inputs.compact }}
-        INPUT_QUIET: ${{ inputs.quiet }}
-        INPUT_OUTPUT_FORMAT: ${{ inputs.output_format }}
-        INPUT_OUTPUT_FILE_PATH: ${{ inputs.output_file_path }}
-        INPUT_SOFT_FAIL: ${{ inputs.soft_fail }}
-        INPUT_FRAMEWORK: ${{ inputs.framework }}
-
-      continue-on-error: true
-
-    - name: Formatting the results
+        ACCUKNOX_ENDPOINT: ${{ inputs.endpoint }}
+        ACCUKNOX_LABEL: ${{ inputs.label }}
+        ACCUKNOX_TOKEN: ${{ inputs.token }}
+        DIRECTORY: ${{ inputs.directory }}
+        FILE: ${{ inputs.file }}
+        COMPACT: ${{ inputs.compact }}
+        QUIET: ${{ inputs.quiet }}
+        SOFT_FAIL: ${{ inputs.soft_fail }}
+        FRAMEWORK: ${{ inputs.framework }}
       run: |
-        jq --arg repoLink "${{ github.server_url }}/${{ github.repository }}" --arg branch "${{ github.ref_name }}" '. += [{"details": {"repo": $repoLink, "branch": $branch}}]' results/results_json.json > temp.json && mv temp.json results.json
-      shell: bash
-
-    - name: Push report to CSPM panel
-      run: |
-        curl --location --request POST 'https://${{ inputs.endpoint }}/api/v1/artifact/?tenant_id=${{ inputs.tenant_id }}&data_type=IAC&label_id=${{ inputs.label }}&save_to_s3=true' --header 'Tenant-Id: ${{ inputs.tenant_id }}' --header 'Authorization: Bearer ${{ inputs.token }}' --form 'file=@"results.json"'
-      shell: bash
-
-    - name: Capture Checkov exit code
-      id: capture-exit-code
-      run: |
-        echo "Checkov exit code: ${{ steps.checkov-scan.outcome }}"
-        if [ "${{ steps.checkov-scan.outcome }}" == "failure" ]; then
-          echo "checkov_failed=true" >> $GITHUB_ENV
+        if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_TOKEN" ]; then
+          echo "ERROR: ACCUKNOX_ENDPOINT, ACCUKNOX_LABEL, and ACCUKNOX_TOKEN must be set!"
+          exit 1
         fi
-      shell: bash
 
-    - name: Fail pipeline at the end if Checkov scan failed
-      if: env.checkov_failed == 'true'
-      run: |
-        echo "Checkov scan failed. Exiting with failure."
-        exit 1
-      shell: bash
+        echo "Downloading AccuKnox ASPM Scanner..."
+        curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
+        chmod +x accuknox-aspm-scanner
+
+        CMD_ARGS=""
+        [ -n "$FILE" ] && CMD_ARGS="$CMD_ARGS --file $FILE"
+        [ -n "$DIRECTORY" ] && CMD_ARGS="$CMD_ARGS --directory $DIRECTORY"
+        [ "$COMPACT" = "true" ] && CMD_ARGS="$CMD_ARGS --compact"
+        [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
+        [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
+
+        if [ "$SOFT_FAIL" = "true" ]; then
+          SOFT_FAIL_ARG="--softfail"
+        fi
+
+        echo ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
+        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"

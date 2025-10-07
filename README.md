@@ -1,68 +1,62 @@
 # Automate Infrastructure as Code Security Checks with AccuKnox GitHub Action
 
-## Learn More
+The **AccuKnox IaC Scan GitHub Action** enables developers and DevSecOps teams to perform automated security scans on Infrastructure-as-Code (IaC) files such as Terraform and Kubernetes manifests. It seamlessly uploads the scan results to the AccuKnox Console, helping teams identify misconfigurations, enforce compliance, and shift security left in the development lifecycle.
 
-- [About Accuknox](https://www.accuknox.com/)
+Ensure your infrastructure code is secure, compliant, and free from risky misconfigurations — **before it reaches production**.
 
-| Input Values     | Description                                                                                                               | Optional/Required | Default Values           |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------- | ----------------- | ------------------------ |
-| file             | Specify a file for scanning; cannot be used with directory input. Filter runners by file type, e.g., '.tf' for Terraform. | Optional          | -                        |
-| directory        | Directory with infrastructure code and/or package manager files to scan                                                   | Optional          | `.`                      |
-| compact          | Do not display code blocks in output                                                                                      | Optional          | -                        |
-| quiet            | Display only failed checks                                                                                                | Optional          | -                        |
-| soft_fail        | Do not return an error code if there are failed checks                                                                    | Optional          | -                        |
-| framework        | Run only on a specific infrastructure, values can be Kubernetes or Terraform.                                             | Optional(🚧)      | -                        |
-| skip_framework   | Skip a specific infrastructure                                                                                            | Optional(🚧)      | -                        |
-| baseline         | Path to a baseline file to compare. Report will include only failed checks that are not in the baseline                   | Optional          | `baseline`               |
-| token            | The token for authenticating with the CSPM panel                                                                          | Required          | -                        |
-| tenant_id        | The ID of the tenant associated with the CSPM panel                                                                       | Required          | -                        |
-| endpoint         | The URL of the CSPM panel to push the scan results to                                                                     | Optional          | `cspm.demo.accuknox.com` |
-| label            | The label created in AccuKnox SaaS for associating scan results.                                                          | Required          | -                        |
+---
 
-## Usage
+## 🎯 Key Features
 
-Steps for using Install-action in a workflow yaml file
+- ✅ **IaC Misconfiguration Detection** – Scan Terraform and Kubernetes files for security risks and compliance violations.  
+- 🔒 **Shift Left Security** – Integrate security checks directly into your CI/CD pipeline for early issue detection.  
+- 📥 **Seamless AccuKnox Console Integration** – Automatically send findings to the AccuKnox dashboard for centralized visibility and triage.  
+- ⚙️ **Flexible Configuration** – Support for selective scan directories, frameworks (Terraform / Kubernetes), and baseline comparisons.  
+- 🚦 **Fail Builds on Violations** – Choose between hard-fail or soft-fail modes to align with your DevOps policies.  
 
-- Checkout into the repo using checkout action.
-- Utilize the accuknox/iac-scan-action repository with version tag v0.0.1.
+---
 
-### Token Generation from Accuknox SaaS and Viewing Tenant ID
+## ⚠️ Prerequisites
 
-Navigate to Tokens within the Settings section in the sidebar:
+Before using this GitHub Action, ensure the following are in place:
 
-![1](https://github.com/udit-uniyal/iac-scan-action/assets/115368361/e3916e08-ab5c-46da-8504-d47778f7d6a8)
+- 🔐 **AccuKnox Console Access** – Sign in to your AccuKnox tenant.  
+- 🗝️ **API Token** – Retrieve this from the AccuKnox Console (see Token Generation).  
+- 🏷️ **Label Created in Console** – For tagging the uploaded scan reports.  
+- 🔑 **GitHub Secrets Configured** – Store the required credentials securely in your repository’s GitHub Secrets.  
 
-Click on Create Token:
-After clicking on 'Create Token,' the Tenant ID will be visible.
-![2](https://github.com/udit-uniyal/iac-scan-action/assets/115368361/b49e25dd-fca0-458e-84d3-48de152ef57d)
+---
 
-Click on Generate:
+## 📌 Installation & Usage
 
-![3](https://github.com/udit-uniyal/iac-scan-action/assets/115368361/11a2b277-649d-4ef7-b51f-861e8b947b59)
+### Step 1: Retrieve AccuKnox Credentials
 
-### workflow steps:
+1. Log in to your AccuKnox Console.  
+2. Navigate to **Settings → Tokens**.  
+3. Click **Create Token** and save the following value:  
+   - `Accuknox_token`  
+4. Create a label under **Dashboard → Labels** to tag scan results.  
 
-```yaml
-- name: Run IaC scan
-  uses: accuknox/iac-scan-action@v0.0.1
-  with:
-    file: #Optional
-    directory: #Optional
-    compact: #Optional
-    quiet: #Optional
-    output_format: #Optional
-    output_file_path: #Optional
-    framework: #Optional
-    skip_framework: #Optional
-    soft_fail: #Optional
-    endpoint: #Optional
-    baseline: #Optional
-    token: #Required
-    tenant_id: #Required
-    label: #Required
-```
+---
 
-## Sample Configuration
+### Step 2: Configure GitHub Secrets
+
+1. Go to your GitHub repository: **Settings → Secrets and variables → Actions → New repository secret**.  
+2. Add the following secrets:
+
+| Secret Name | Description |
+|------------|-------------|
+| `ACCUKNOX_TOKEN`    | Your AccuKnox API token for authentication |
+| `ACCUKNOX_ENDPOINT` | The AccuKnox API URL (e.g., `cspm.demo.accuknox.com`) |
+| `ACCUKNOX_LABEL`    | Label used to tag and group scan results |
+
+These secrets are required to authenticate the scan and send results to your AccuKnox SaaS dashboard.
+
+---
+
+### Step 3: Define Your GitHub Workflow
+
+Create a workflow file (e.g., `.github/workflows/iac-scan.yml`) and add the following configuration:
 
 ```yaml
 name: AccuKnox IaC Scan Workflow
@@ -85,18 +79,71 @@ jobs:
       - name: Run IaC scan
         uses: accuknox/iac-scan-action@v0.0.1
         with:
-          file:
-          directory:
-          compact:
-          quiet:
-          output_format:
-          output_file_path:
-          framework:
-          skip_framework:
-          soft_fail:
-          endpoint:
-          baseline:
+          directory: "."                            # Optional: Directory to scan
+          compact: true                             # Optional: Minimise output
+          quiet: true                               # Optional: Show only failed checks
+          output_format: json                       # Optional: Format of output
+          output_file_path: "./results.json"        # Optional: Output file path
+          soft_fail: true                           # Optional: Will continue after found vulnerability 
           token: ${{ secrets.TOKEN }}
-          tenant_id: ${{ secrets.TENANT_ID }}
+          endpoint: ${{ secrets.ENDPOINT }}
           label: ${{ secrets.LABEL }}
 ```
+
+## ⚙️ Configuration Options (Inputs)
+
+| Input            | Description | Optional/Required | Default |
+|-----------------|------------|-----------------|---------|
+| `file`           | Specify a single file to scan (e.g., `.tf`). Cannot be used with a directory. | Optional | — |
+| `directory`      | Directory with IaC files to scan. | Optional | `.` (current directory) |
+| `compact`        | Minimise output (e.g., hides code blocks). | Optional | — |
+| `quiet`          | Show only failed checks in output. | Optional | `false` |
+| `soft_fail`      | Prevent CI from failing on failed checks. | Optional | `false` |
+| `framework`      | Limit scan to a specific framework: terraform, kubernetes, etc. (lowercase) | Optional | `all` |
+| `skip_framework` | Skip scanning of a specific framework. | Optional | — |
+| `token`          | API token for authenticating with AccuKnox SaaS. | Required | — |
+| `endpoint`       | URL of the AccuKnox Console to push results. | Optional | `cspm.demo.accuknox.com` |
+| `label`          | Label used in AccuKnox SaaS to organise and identify scan results. | Required | — |
+| `output_format`  | Format of the output. Supported: json, cli, etc. | Optional | `cli` |
+| `output_file_path` | File path to write output results to. | Optional | — |
+| `baseline`       | Path to a baseline file to suppress known findings | Optional | `baseline` |
+
+---
+
+## 🔍 How It Works
+
+1. **Developer pushes code** – Push or pull request triggers the GitHub Action.  
+2. **IaC Scanner runs** – Scans Terraform or Kubernetes files for:  
+   - Misconfigurations  
+   - Policy violations  
+   - Compliance issues (e.g., NIST, CIS)  
+3. **Scan results uploaded to AccuKnox Console** – Using the provided `token` and `label`.  
+4. **Review findings** – Available in AccuKnox Console: **Dashboard → Issues → Findings → Filter by IaC Findings**.  
+5. **Optional: Fail the pipeline** – If `soft_fail: false`, the pipeline will break on violations, enforcing CI/CD security.
+
+---
+
+## 🛠️ Troubleshooting & Best Practices
+
+| Issue | Cause | Solution |
+|-------|-------|---------|
+| "Missing required input: token" | GitHub secret not set | Ensure `ACCUKNOX_TOKEN` is added in Settings → Secrets |
+| "Failed to connect to endpoint" | Incorrect API URL or network issue | Check if the endpoint is correct and accessible |
+| No scan results in AccuKnox Console | Missing label or invalid credentials | Verify label and token values |
+| Workflow fails even with minor findings | `soft_fail` not set | Set `soft_fail: true` if you want the build to continue despite findings |
+| Empty scan report | Wrong directory or framework used | Check if the directory and framework inputs are correctly set and point to valid IaC files |
+
+---
+
+## 📖 Support & Documentation
+
+- 📚 **Read More:** [AccuKnox Docs](https://www.accuknox.com/docs)  
+- 📧 **Contact Support:** support@accuknox.com  
+
+---
+
+## 🏁 Conclusion
+
+The AccuKnox IaC Scan GitHub Action empowers your CI/CD pipelines with automated security scanning for Terraform and Kubernetes configurations. Identify misconfigurations early, enforce policy controls, and maintain continuous compliance for your infrastructure code.
+
+**🔐 Shift Left with AccuKnox – Secure Your Infrastructure from Code to Cloud! ☁️🛡️**
