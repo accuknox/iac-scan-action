@@ -1,5 +1,87 @@
-name: "AccuKnox IaC Scanner"
-description: "Run AccuKnox Infrastructure as Code (IaC) scan on the repository"
+# name: "AccuKnox IaC Scanner"
+# description: "Run AccuKnox Infrastructure as Code (IaC) scan on the repository"
+
+# branding:
+#   icon: "shield"
+#   color: "purple"
+
+# inputs:
+#   directory:
+#     description: 'Directory with infrastructure code to scan'
+#     required: false
+#     default: "."
+#   file:
+#     description: 'Specify a file for scanning; cannot be used with directory input.'
+#     required: false
+#     default: ""
+#   compact:
+#     description: "Do not display code blocks in output"
+#     required: false
+#     default: true
+#   quiet:
+#     description: "Display only failed checks"
+#     required: false
+#     default: true
+#   soft_fail:
+#     description: "Do not return an error code if there are failed checks"
+#     required: false
+#     default: false
+#   framework:
+#     description: "Run only on a specific infrastructure, Kubernetes or Terraform"
+#     required: false
+#     default: ""
+#   endpoint:
+#     description: "CSPM panel endpoint URL"
+#     required: true
+#   label:
+#     description: "Label in AccuKnox SaaS for scan results"
+#     required: true
+#   token:
+#     description: "Token for authenticating with CSPM panel"
+#     required: true
+
+# runs:
+#   using: "composite"
+#   steps:
+#     - name: Run AccuKnox IaC Scanner
+#       shell: bash
+#       env:
+#         ACCUKNOX_ENDPOINT: ${{ inputs.endpoint }}
+#         ACCUKNOX_LABEL: ${{ inputs.label }}
+#         ACCUKNOX_TOKEN: ${{ inputs.token }}
+#         DIRECTORY: ${{ inputs.directory }}
+#         FILE: ${{ inputs.file }}
+#         COMPACT: ${{ inputs.compact }}
+#         QUIET: ${{ inputs.quiet }}
+#         SOFT_FAIL: ${{ inputs.soft_fail }}
+#         FRAMEWORK: ${{ inputs.framework }}
+#       run: |
+#         if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_TOKEN" ]; then
+#           echo "ERROR: ACCUKNOX_ENDPOINT, ACCUKNOX_LABEL, and ACCUKNOX_TOKEN must be set!"
+#           exit 1
+#         fi
+
+#         echo "Downloading AccuKnox ASPM Scanner..."
+#         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
+#         chmod +x accuknox-aspm-scanner
+
+#         CMD_ARGS=""
+#         [ -n "$FILE" ] && CMD_ARGS="$CMD_ARGS --file $FILE"
+#         [ -n "$DIRECTORY" ] && CMD_ARGS="$CMD_ARGS --directory $DIRECTORY"
+#         [ "$COMPACT" = "true" ] && CMD_ARGS="$CMD_ARGS --compact"
+#         [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
+#         [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
+
+#         if [ "$SOFT_FAIL" = "true" ]; then
+#           SOFT_FAIL_ARG="--softfail"
+#         fi
+
+#         echo ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
+#         ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
+
+
+name: "accuknox iac scanner"
+description: "run Accuknox infrastructure as code (IAC) scan on the repository"
 
 branding:
   icon: "shield"
@@ -7,74 +89,74 @@ branding:
 
 inputs:
   directory:
-    description: 'Directory with infrastructure code to scan'
+    description: "directory with infrastructure code to scan"
     required: false
     default: "."
   file:
-    description: 'Specify a file for scanning; cannot be used with directory input.'
+    description: "specify a file for scanning; cannot be used with directory input."
     required: false
     default: ""
   compact:
-    description: "Do not display code blocks in output"
+    description: "do not display code blocks in output"
     required: false
     default: true
   quiet:
-    description: "Display only failed checks"
+    description: "display only failed checks"
     required: false
     default: true
   soft_fail:
-    description: "Do not return an error code if there are failed checks"
+    description: "do not return an error code if there are failed checks"
     required: false
     default: false
   framework:
-    description: "Run only on a specific infrastructure, Kubernetes or Terraform"
+    description: "run only on a specific infrastructure, Kubernetes or Terraform"
     required: false
     default: ""
   endpoint:
-    description: "CSPM panel endpoint URL"
+    description: "cspm panel endpoint url"
     required: true
   label:
-    description: "Label in AccuKnox SaaS for scan results"
+    description: "label in accuknox saas for scan results"
     required: true
   token:
-    description: "Token for authenticating with CSPM panel"
+    description: "token for authenticating with CSPM panel"
     required: true
 
 runs:
   using: "composite"
   steps:
-    - name: Run AccuKnox IaC Scanner
+    - name: run accuknox iac scanner
       shell: bash
       env:
-        ACCUKNOX_ENDPOINT: ${{ inputs.endpoint }}
-        ACCUKNOX_LABEL: ${{ inputs.label }}
-        ACCUKNOX_TOKEN: ${{ inputs.token }}
-        DIRECTORY: ${{ inputs.directory }}
-        FILE: ${{ inputs.file }}
-        COMPACT: ${{ inputs.compact }}
-        QUIET: ${{ inputs.quiet }}
-        SOFT_FAIL: ${{ inputs.soft_fail }}
-        FRAMEWORK: ${{ inputs.framework }}
+        accuknox_endpoint: ${{ inputs.endpoint }}
+        accuknox_label: ${{ inputs.label }}
+        accuknox_token: ${{ inputs.token }}
+        directory: ${{ inputs.directory }}
+        file: ${{ inputs.file }}
+        compact: ${{ inputs.compact }}
+        quiet: ${{ inputs.quiet }}
+        soft_fail: ${{ inputs.soft_fail }}
+        framework: ${{ inputs.framework }}
       run: |
-        if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_TOKEN" ]; then
-          echo "ERROR: ACCUKNOX_ENDPOINT, ACCUKNOX_LABEL, and ACCUKNOX_TOKEN must be set!"
+        if [ -z "$accuknox_endpoint" ] || [ -z "$accuknox_label" ] || [ -z "$accuknox_token" ]; then
+          echo "error: accuknox_endpoint, accuknox_label, and accuknox_token must be set!"
           exit 1
         fi
 
-        echo "Downloading AccuKnox ASPM Scanner..."
+        echo "downloading Accuknox aspm scanner..."
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
 
-        CMD_ARGS=""
-        [ -n "$FILE" ] && CMD_ARGS="$CMD_ARGS --file $FILE"
-        [ -n "$DIRECTORY" ] && CMD_ARGS="$CMD_ARGS --directory $DIRECTORY"
-        [ "$COMPACT" = "true" ] && CMD_ARGS="$CMD_ARGS --compact"
-        [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
-        [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
+        cmd_args=""
+        [ -n "$file" ] && cmd_args="$cmd_args --file $file"
+        [ -n "$directory" ] && cmd_args="$cmd_args --directory $directory"
+        [ "$compact" = "true" ] && cmd_args="$cmd_args --compact"
+        [ "$quiet" = "true" ] && cmd_args="$cmd_args --quiet"
+        [ -n "$framework" ] && cmd_args="$cmd_args --framework $framework"
 
-        if [ "$SOFT_FAIL" = "true" ]; then
-          SOFT_FAIL_ARG="--softfail"
+        if [ "$soft_fail" = "true" ]; then
+          soft_fail_arg="--softfail"
         fi
 
-        echo ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
-        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
+        echo ./accuknox-aspm-scanner scan $soft_fail_arg iac --command "$cmd_args" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
+        ./accuknox-aspm-scanner scan $soft_fail_arg iac --command "$cmd_args" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
