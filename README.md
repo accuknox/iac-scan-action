@@ -34,7 +34,7 @@ Before using this GitHub Action, ensure the following are in place:
 1. Log in to your AccuKnox Console.  
 2. Navigate to **Settings → Tokens**.  
 3. Click **Create Token** and save the following value:  
-   - `Accuknox_token`  
+   - `accuknox_token`  
 4. Create a label under **Dashboard → Labels** to tag scan results.  
 
 ---
@@ -85,9 +85,9 @@ jobs:
           output_format: json                       # Optional: Format of output
           output_file_path: "./results.json"        # Optional: Output file path
           soft_fail: true                           # Optional: Will continue after found vulnerability 
-          token: ${{ secrets.TOKEN }}
-          endpoint: ${{ secrets.ENDPOINT }}
-          label: ${{ secrets.LABEL }}
+          accuknox_token: ${{ secrets.ACCUKNOX_TOKEN }}
+          accuknox_label: ${{ secrets.ACCUKNOX_LABEL }}
+          accuknox_endpoint: ${{ secrets.ACCUKNOX_ENDPOINT }}
 ```
 
 ## ⚙️ Configuration Options (Inputs)
