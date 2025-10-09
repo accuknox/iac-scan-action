@@ -1,6 +1,10 @@
 name: "AccuKnox IaC Scanner"
 description: "Run AccuKnox Infrastructure as Code (IaC) scan on the repository"
 
+branding:
+  icon: "shield"
+  color: "purple"
+
 inputs:
   directory:
     description: 'Directory with infrastructure code to scan'
