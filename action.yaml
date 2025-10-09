@@ -80,14 +80,23 @@
 #         ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
 
 
-name: "accuknox iac scanner"
-description: "run Accuknox infrastructure as code (IAC) scan on the repository"
+name: "Accuknox IAC scanner"
+description: "Run Accuknox infrastructure as code (IAC) scan on the repository"
 
 branding:
   icon: "shield"
   color: "purple"
 
 inputs:
+  accuknox_token:
+    description: "token for authenticating with CSPM panel"
+    required: true
+  accuknox_label:
+    description: "label in AccuKnox SaaS for scan results"
+    required: true
+  accuknox_endpoint:
+    description: "CSPM panel endpoint URL"
+    required: true
   directory:
     description: "directory with infrastructure code to scan"
     required: false
@@ -112,15 +121,6 @@ inputs:
     description: "run only on a specific infrastructure, Kubernetes or Terraform"
     required: false
     default: ""
-  accuknox_endpoint:
-    description: "cspm panel endpoint url"
-    required: true
-  accuknox_label:
-    description: "label in accuknox saas for scan results"
-    required: true
-  accuknox_token:
-    description: "token for authenticating with CSPM panel"
-    required: true
 
 runs:
   using: "composite"
@@ -128,36 +128,35 @@ runs:
     - name: run accuknox iac scanner
       shell: bash
       env:
-        accuknox_endpoint: ${{ inputs.accuknox_endpoint }}
-        accuknox_label: ${{ inputs.accuknox_label }}
-        accuknox_token: ${{ inputs.accuknox_token }}
-        directory: ${{ inputs.directory }}
-        file: ${{ inputs.file }}
-        compact: ${{ inputs.compact }}
-        quiet: ${{ inputs.quiet }}
-        soft_fail: ${{ inputs.soft_fail }}
-        framework: ${{ inputs.framework }}
+        # Map lowercase inputs to uppercase environment variables
+        ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
+        ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
+        ACCUKNOX_ENDPOINT: ${{ inputs.accuknox_endpoint }}
+        DIRECTORY: ${{ inputs.directory }}
+        FILE: ${{ inputs.file }}
+        COMPACT: ${{ inputs.compact }}
+        QUIET: ${{ inputs.quiet }}
+        SOFT_FAIL: ${{ inputs.soft_fail }}
+        FRAMEWORK: ${{ inputs.framework }}
       run: |
-        if [ -z "$accuknox_endpoint" ] || [ -z "$accuknox_label" ] || [ -z "$accuknox_token" ]; then
-          echo "error: accuknox_endpoint, accuknox_label, and accuknox_token must be set!"
+        if [ -z "$ACCUKNOX_TOKEN" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_ENDPOINT" ]; then
+          echo "error: ACCUKNOX_TOKEN, ACCUKNOX_LABEL, and ACCUKNOX_ENDPOINT must be set!"
           exit 1
         fi
 
-        echo "Downloading Accuknox aspm scanner..."
+        echo "Downloading Accuknox ASPM Scanner..."
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
 
-        cmd_args=""
-        [ -n "$file" ] && cmd_args="$cmd_args --file $file"
-        [ -n "$directory" ] && cmd_args="$cmd_args --directory $directory"
-        [ "$compact" = "true" ] && cmd_args="$cmd_args --compact"
-        [ "$quiet" = "true" ] && cmd_args="$cmd_args --quiet"
-        [ -n "$framework" ] && cmd_args="$cmd_args --framework $framework"
+        CMD_ARGS=""
+        [ -n "$FILE" ] && CMD_ARGS="$CMD_ARGS --file $FILE"
+        [ -n "$DIRECTORY" ] && CMD_ARGS="$CMD_ARGS --directory $DIRECTORY"
+        [ "$COMPACT" = "true" ] && CMD_ARGS="$CMD_ARGS --compact"
+        [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
+        [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
 
-        soft_fail_arg=""
-        if [ "$soft_fail" = "true" ]; then
-          soft_fail_arg="--softfail"
-        fi
+        SOFT_FAIL_ARG=""
+        [ "$SOFT_FAIL" = "true" ] && SOFT_FAIL_ARG="--softfail"
 
-        echo ./accuknox-aspm-scanner scan $soft_fail_arg iac --command "$cmd_args" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
-        ./accuknox-aspm-scanner scan $soft_fail_arg iac --command "$cmd_args" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
+        echo ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
+        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
