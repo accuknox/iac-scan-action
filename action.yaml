@@ -1,85 +1,3 @@
-# name: "AccuKnox IaC Scanner"
-# description: "Run AccuKnox Infrastructure as Code (IaC) scan on the repository"
-
-# branding:
-#   icon: "shield"
-#   color: "purple"
-
-# inputs:
-#   directory:
-#     description: 'Directory with infrastructure code to scan'
-#     required: false
-#     default: "."
-#   file:
-#     description: 'Specify a file for scanning; cannot be used with directory input.'
-#     required: false
-#     default: ""
-#   compact:
-#     description: "Do not display code blocks in output"
-#     required: false
-#     default: true
-#   quiet:
-#     description: "Display only failed checks"
-#     required: false
-#     default: true
-#   soft_fail:
-#     description: "Do not return an error code if there are failed checks"
-#     required: false
-#     default: false
-#   framework:
-#     description: "Run only on a specific infrastructure, Kubernetes or Terraform"
-#     required: false
-#     default: ""
-#   endpoint:
-#     description: "CSPM panel endpoint URL"
-#     required: true
-#   label:
-#     description: "Label in AccuKnox SaaS for scan results"
-#     required: true
-#   token:
-#     description: "Token for authenticating with CSPM panel"
-#     required: true
-
-# runs:
-#   using: "composite"
-#   steps:
-#     - name: Run AccuKnox IaC Scanner
-#       shell: bash
-#       env:
-#         ACCUKNOX_ENDPOINT: ${{ inputs.endpoint }}
-#         ACCUKNOX_LABEL: ${{ inputs.label }}
-#         ACCUKNOX_TOKEN: ${{ inputs.token }}
-#         DIRECTORY: ${{ inputs.directory }}
-#         FILE: ${{ inputs.file }}
-#         COMPACT: ${{ inputs.compact }}
-#         QUIET: ${{ inputs.quiet }}
-#         SOFT_FAIL: ${{ inputs.soft_fail }}
-#         FRAMEWORK: ${{ inputs.framework }}
-#       run: |
-#         if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_TOKEN" ]; then
-#           echo "ERROR: ACCUKNOX_ENDPOINT, ACCUKNOX_LABEL, and ACCUKNOX_TOKEN must be set!"
-#           exit 1
-#         fi
-
-#         echo "Downloading AccuKnox ASPM Scanner..."
-#         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
-#         chmod +x accuknox-aspm-scanner
-
-#         CMD_ARGS=""
-#         [ -n "$FILE" ] && CMD_ARGS="$CMD_ARGS --file $FILE"
-#         [ -n "$DIRECTORY" ] && CMD_ARGS="$CMD_ARGS --directory $DIRECTORY"
-#         [ "$COMPACT" = "true" ] && CMD_ARGS="$CMD_ARGS --compact"
-#         [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
-#         [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
-
-#         if [ "$SOFT_FAIL" = "true" ]; then
-#           SOFT_FAIL_ARG="--softfail"
-#         fi
-
-#         echo ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
-#         ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
-
-
 name: "Accuknox IAC scanner"
 description: "Run Accuknox infrastructure as code (IAC) scan on the repository"
 
@@ -125,10 +43,9 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: run accuknox iac scanner
+    - name: Run Accuknox IAC scanner
       shell: bash
       env:
-        # Map lowercase inputs to uppercase environment variables
         ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
         ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
         ACCUKNOX_ENDPOINT: ${{ inputs.accuknox_endpoint }}
