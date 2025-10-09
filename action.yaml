@@ -109,7 +109,7 @@ inputs:
     required: false
     default: false
   framework:
-    description: "run only on a specific infrastructure, kubernetes or terraform"
+    description: "run only on a specific infrastructure, Kubernetes or Terraform"
     required: false
     default: ""
   accuknox_endpoint:
@@ -119,7 +119,7 @@ inputs:
     description: "label in accuknox saas for scan results"
     required: true
   accuknox_token:
-    description: "token for authenticating with cspm panel"
+    description: "token for authenticating with CSPM panel"
     required: true
 
 runs:
@@ -143,7 +143,7 @@ runs:
           exit 1
         fi
 
-        echo "downloading Accuknox aspm scanner..."
+        echo "Downloading Accuknox aspm scanner..."
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.13.4/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
 
@@ -154,6 +154,7 @@ runs:
         [ "$quiet" = "true" ] && cmd_args="$cmd_args --quiet"
         [ -n "$framework" ] && cmd_args="$cmd_args --framework $framework"
 
+        soft_fail_arg=""
         if [ "$soft_fail" = "true" ]; then
           soft_fail_arg="--softfail"
         fi
