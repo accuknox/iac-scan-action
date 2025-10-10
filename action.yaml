@@ -30,13 +30,13 @@ inputs:
     description: "Run only on a specific infrastructure, Kubernetes or Terraform"
     required: false
     default: ""
-  endpoint:
+  accuknox_endpoint:
     description: "CSPM panel endpoint URL"
     required: true
-  label:
+  accuknox_label:
     description: "Label in AccuKnox SaaS for scan results"
     required: true
-  token:
+  accuknox_token:
     description: "Token for authenticating with CSPM panel"
     required: true
 
@@ -46,9 +46,9 @@ runs:
     - name: Run AccuKnox IaC Scanner
       shell: bash
       env:
-        ACCUKNOX_ENDPOINT: ${{ inputs.endpoint }}
-        ACCUKNOX_LABEL: ${{ inputs.label }}
-        ACCUKNOX_TOKEN: ${{ inputs.token }}
+        ACCUKNOX_ENDPOINT: ${{ inputs.accuknox_endpoint }}
+        ACCUKNOX_LABEL: ${{ inputs.accuknox_label }}
+        ACCUKNOX_TOKEN: ${{ inputs.accuknox_token }}
         DIRECTORY: ${{ inputs.directory }}
         FILE: ${{ inputs.file }}
         COMPACT: ${{ inputs.compact }}

@@ -85,9 +85,9 @@ jobs:
           output_format: json                       # Optional: Format of output
           output_file_path: "./results.json"        # Optional: Output file path
           soft_fail: true                           # Optional: Will continue after found vulnerability 
-          token: ${{ secrets.TOKEN }}
-          endpoint: ${{ secrets.ENDPOINT }}
-          label: ${{ secrets.LABEL }}
+          accuknox_token: ${{ secrets.TOKEN }}
+          accuknox_endpoint: ${{ secrets.ENDPOINT }}
+          accuknox_label: ${{ secrets.LABEL }}
 ```
 
 ## ⚙️ Configuration Options (Inputs)
@@ -101,9 +101,9 @@ jobs:
 | `soft_fail`      | Prevent CI from failing on failed checks. | Optional | `false` |
 | `framework`      | Limit scan to a specific framework: terraform, kubernetes, etc. (lowercase) | Optional | `all` |
 | `skip_framework` | Skip scanning of a specific framework. | Optional | — |
-| `token`          | API token for authenticating with AccuKnox SaaS. | Required | — |
-| `endpoint`       | URL of the AccuKnox Console to push results. | Optional | `cspm.demo.accuknox.com` |
-| `label`          | Label used in AccuKnox SaaS to organise and identify scan results. | Required | — |
+| `accuknox_token`          | API token for authenticating with AccuKnox SaaS. | Required | — |
+| `accuknox_endpoint`       | URL of the AccuKnox Console to push results. | Optional | `cspm.demo.accuknox.com` |
+| `accuknox_label`          | Label used in AccuKnox SaaS to organise and identify scan results. | Required | — |
 | `output_format`  | Format of the output. Supported: json, cli, etc. | Optional | `cli` |
 | `output_file_path` | File path to write output results to. | Optional | — |
 | `baseline`       | Path to a baseline file to suppress known findings | Optional | `baseline` |
