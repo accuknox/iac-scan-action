@@ -1,4 +1,4 @@
-name: "AccuKnox IaC Scanner"
+name: "AccuKnox IaC "
 description: "Run AccuKnox Infrastructure as Code (IaC) scan on the repository"
 
 branding:
