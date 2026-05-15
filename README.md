@@ -74,7 +74,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@main
+        uses: actions/checkout@v6
 
       - name: Run IaC scan
         uses: accuknox/iac-scan-action@latest
@@ -85,9 +85,9 @@ jobs:
           output_format: json                       # Optional: Format of output
           output_file_path: "./results.json"        # Optional: Output file path
           soft_fail: true                           # Optional: Will continue after found vulnerability 
-          accuknox_token: ${{ secrets.TOKEN }}
-          accuknox_endpoint: ${{ secrets.ENDPOINT }}
-          accuknox_label: ${{ secrets.LABEL }}
+          accuknox_token: ${{ secrets.ACCUKNOX_TOKEN }}
+          accuknox_endpoint: ${{ secrets.ACCUKNOX_ENDPOINT }}
+          accuknox_label: ${{ secrets.ACCUKNOX_LABEL }}
 ```
 
 ## ⚙️ Configuration Options (Inputs)
