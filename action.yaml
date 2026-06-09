@@ -77,8 +77,11 @@ runs:
         [ "$QUIET" = "true" ] && CMD_ARGS="$CMD_ARGS --quiet"
         [ -n "$FRAMEWORK" ] && CMD_ARGS="$CMD_ARGS --framework $FRAMEWORK"
 
+        SOFT_FAIL_ARG=""
+        SOFT_FAIL="${SOFT_FAIL//[$'\t\r\n ']}"
         if [ "$SOFT_FAIL" = "true" ]; then
-          SOFT_FAIL_ARG="--softfail"
+        SOFT_FAIL_ARG="--softfail"
+        fi
         fi
         SEVERITY_ARG=""
         SEVERITY="${SEVERITY//[$'\t\r\n ']}"
