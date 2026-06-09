@@ -88,5 +88,5 @@ runs:
          SEVERITY_ARG="--severity $SEVERITY"
         fi
 
-        echo ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" $SEVERITY_ARG --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
-        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" $SEVERITY_ARG --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
+        echo ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/} $SEVERITY_ARG"
+        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/} $SEVERITY_ARG"
