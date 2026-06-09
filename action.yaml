@@ -26,6 +26,10 @@ inputs:
     description: "Do not return an error code if there are failed checks"
     required: false
     default: false
+  severity:
+    description: "Comma-separated severities: UNKNOWN, LOW, MEDIUM, HIGH, CRITICAL"
+    required: false
+    default: "UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL"
   framework:
     description: "Run only on a specific infrastructure, Kubernetes or Terraform"
     required: false
@@ -54,6 +58,7 @@ runs:
         COMPACT: ${{ inputs.compact }}
         QUIET: ${{ inputs.quiet }}
         SOFT_FAIL: ${{ inputs.soft_fail }}
+        SEVERITY: ${{ inputs.severity }}
         FRAMEWORK: ${{ inputs.framework }}
       run: |
         if [ -z "$ACCUKNOX_ENDPOINT" ] || [ -z "$ACCUKNOX_LABEL" ] || [ -z "$ACCUKNOX_TOKEN" ]; then
@@ -75,6 +80,11 @@ runs:
         if [ "$SOFT_FAIL" = "true" ]; then
           SOFT_FAIL_ARG="--softfail"
         fi
+        SEVERITY_ARG=""
+        SEVERITY="${SEVERITY//[$'\t\r\n ']}"
+        if [ -n "$SEVERITY" ]; then
+         SEVERITY_ARG="--severity $SEVERITY"
+        fi
 
-        echo ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
-        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
+        echo ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG $SEVERITY_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
+        ./accuknox-aspm-scanner scan $SOFT_FAIL_ARG $SEVERITY_ARG iac --command "$CMD_ARGS" --container-mode --repo-url "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git" --repo-branch "${GITHUB_REF#refs/heads/}"
