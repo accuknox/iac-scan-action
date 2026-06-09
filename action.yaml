@@ -82,7 +82,6 @@ runs:
         if [ "$SOFT_FAIL" = "true" ]; then
         SOFT_FAIL_ARG="--softfail"
         fi
-        fi
         SEVERITY_ARG=""
         SEVERITY="${SEVERITY//[$'\t\r\n ']}"
         if [ -n "$SEVERITY" ]; then
