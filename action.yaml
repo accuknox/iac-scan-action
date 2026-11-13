@@ -65,6 +65,9 @@ runs:
         curl -L https://github.com/accuknox/aspm-scanner-cli/releases/download/v0.15.1/accuknox-aspm-scanner -o accuknox-aspm-scanner
         chmod +x accuknox-aspm-scanner
 
+        echo "Installing local OpenGrep binary and rules (no container image)..."
+        "$SCANNER" tool install --type iac
+
         CMD_ARGS=""
         [ -n "$FILE" ] && CMD_ARGS="$CMD_ARGS --file $FILE"
         [ -n "$DIRECTORY" ] && CMD_ARGS="$CMD_ARGS --directory $DIRECTORY"
