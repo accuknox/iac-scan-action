@@ -66,7 +66,7 @@ runs:
         chmod +x accuknox-aspm-scanner
 
         echo "Installing local OpenGrep binary and rules (no container image)..."
-        "$SCANNER" tool install --type iac
+        ./accuknox-aspm-scanner tool install --type iac
 
         CMD_ARGS=""
         [ -n "$FILE" ] && CMD_ARGS="$CMD_ARGS --file $FILE"
